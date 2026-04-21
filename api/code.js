@@ -2,6 +2,9 @@ import fetch from 'node-fetch'
 import { stringify } from 'querystring'
 
 export default async function (ctx, code) {
+  const base = String(ctx.callbackDomain || '').replace(/\/$/, '')
+  const redirectUri = `${base}/auth/discord/callback`
+
   const tokenResp = await fetch(`https://discord.com/api/oauth2/token`, {
     method: 'POST',
     headers: {
@@ -12,7 +15,7 @@ export default async function (ctx, code) {
       client_secret: process.env.DISCORD_SECRET,
       code: code,
       grant_type: 'authorization_code',
-      scope: ctx.discordScopes,
+      redirect_uri: redirectUri,
     }),
   })
   const tokenData = await tokenResp.json()
@@ -42,7 +45,7 @@ export default async function (ctx, code) {
     avatar: userData.avatar,
   })
 
-  const { results } = await ctx.query(`SELECT * FROM configs WHERE discord_id = ?`, [userData.id])
+  const { results } = await ctx.query(`SELECT * FROM ${ctx.tables.configs} WHERE discord_id = $1`, [userData.id])
   const config = results && results.length ? results[0] : {}
 
   return {

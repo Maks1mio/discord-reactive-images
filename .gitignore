@@ -65,6 +65,9 @@ typings/
 # next.js build output
 .next
 
+# Локальные загрузки изображений (сервер)
+/uploads
+
 # nuxt.js build output
 .nuxt
 

@@ -1,5 +1,6 @@
 import { onBeforeUnmount, reactive, Ref, ref, useContext, watch } from '@nuxtjs/composition-api'
 import jwt_decode from 'jwt-decode'
+import { publicImageUrl } from '~/assets/publicImage'
 
 export interface Config {
   id?: string
@@ -57,6 +58,9 @@ interface GetSelectedVoiceChannelResponse {
   id: string
 }
 
+/** Тот же ID, что DISCORD_ID в .env — должен совпадать с приложением в Discord Developer Portal (RPC + OAuth). */
+const rpcClientId = process.env.DISCORD_ID || ''
+
 export function useDiscordRPC() {
   // @ts-ignore
   const { $api } = useContext()
@@ -105,10 +109,10 @@ export function useDiscordRPC() {
       .filter((m) => avatars.has(m.id))
       .map((m) => {
         const images = avatars.get(m.id)
-        const inactive = images && images.inactive ? `https://cdn.discord-reactive-images.fugi.tech/${images.inactive}` : null
-        const speaking = images && images.speaking ? `https://cdn.discord-reactive-images.fugi.tech/${images.speaking}` : null
-        const inactiveOverride = images && images.inactiveOverride ? `https://cdn.discord-reactive-images.fugi.tech/${images.inactiveOverride}` : null
-        const speakingOverride = images && images.speakingOverride ? `https://cdn.discord-reactive-images.fugi.tech/${images.speakingOverride}` : null
+        const inactive = images && images.inactive ? publicImageUrl(images.inactive) : null
+        const speaking = images && images.speaking ? publicImageUrl(images.speaking) : null
+        const inactiveOverride = images && images.inactiveOverride ? publicImageUrl(images.inactiveOverride) : null
+        const speakingOverride = images && images.speakingOverride ? publicImageUrl(images.speakingOverride) : null
 
         m.images = {
           inactive: inactiveOverride || speakingOverride || inactive || speaking || `https://cdn.discordapp.com/avatars/${m.id}/${m.avatar}.png?size=1024`,
@@ -118,7 +122,7 @@ export function useDiscordRPC() {
 
         return m
       })
-      .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base', ignorePunctuation: true }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru', { sensitivity: 'base', ignorePunctuation: true }))
   }
 
   watch(config, (config) => {
@@ -167,9 +171,20 @@ export function useDiscordRPC() {
     connect(tries = 0) {
       if (socket) return
 
+      if (!rpcClientId) {
+        error.value =
+          'Не задан DISCORD_ID в окружении. Укажите ID приложения из Discord Developer Portal (как для OAuth).'
+        return
+      }
+
       try {
         const port = 6463 + (tries % 10)
-        socket = new WebSocket(`ws://127.0.0.1:${port}/?v=1&client_id=794365445557846066`)
+        const q = new URLSearchParams({
+          v: '1',
+          client_id: rpcClientId,
+          encoding: 'json',
+        })
+        socket = new WebSocket(`ws://127.0.0.1:${port}/?${q.toString()}`)
       } catch (err) {
         console.error(err)
         s._handleClose({ code: 1006 })
@@ -278,7 +293,8 @@ export function useDiscordRPC() {
 
     _handleClose(e: { code: number }) {
       console.error('WS Closed: ', e)
-      error.value = 'Disconnected from Discord. Ensure Discord is running and try refreshing.'
+      error.value =
+        'Соединение с локальным Discord (RPC) потеряно. Проверьте: Discord запущен; в Developer Portal у приложения указан тот же DISCORD_ID; в OAuth2 добавлен RPC origin страницы (например http://localhost:3000) и redirect callback; для непубличного приложения ваш аккаунт в списке тестеров. Затем обновите страницу.'
       channelID = null
 
       if (socket) {
@@ -296,7 +312,7 @@ export function useDiscordRPC() {
     async evt_READY() {
       if (!config.value.token) {
         const d = <AuthorizeResponse>await s.request('AUTHORIZE', {
-          client_id: '794365445557846066',
+          client_id: rpcClientId,
           scopes: ['rpc', 'identify'],
           prompt: 'none',
         })
@@ -308,7 +324,7 @@ export function useDiscordRPC() {
         await s.request('AUTHENTICATE', { access_token: config.value.token })
       } catch (_) {
         config.value = {}
-        error.value = 'Failed to authenticate with Discord. Try refreshing.'
+        error.value = 'Не удалось авторизоваться в Discord. Попробуйте обновить страницу.'
         return
       }
 

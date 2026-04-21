@@ -1,11 +1,18 @@
 import fetch from 'node-fetch'
 import { stringify } from 'querystring'
 import { Router } from 'express'
+import { siteGateEnabled, verifyGateCookie } from '../api/gate.js'
+import { cookieShouldBeSecure } from '../api/cookies.js'
 
 export default function (ctx) {
   const app = Router()
+  const secure = cookieShouldBeSecure()
 
   app.get('/login', async (req, res) => {
+    if (siteGateEnabled() && !verifyGateCookie(req)) {
+      return res.redirect(`${ctx.callbackDomain}/?need_gate=1`)
+    }
+
     const n = ctx.nonce()
 
     res.cookie(
@@ -14,7 +21,7 @@ export default function (ctx) {
         path: req.query.path || '/',
         nonce: n,
       }),
-      { httpOnly: true, secure: process.env.NODE_ENV === 'production' }
+      { httpOnly: true, secure, sameSite: 'lax', path: '/' }
     )
 
     res.redirect(
@@ -35,7 +42,7 @@ export default function (ctx) {
       return
     }
     const cookie = ctx.decrypt(req.cookies.login)
-    res.clearCookie('login', { httpOnly: true, secure: process.env.NODE_ENV === 'production' })
+    res.clearCookie('login', { httpOnly: true, secure, sameSite: 'lax', path: '/' })
 
     if (cookie.nonce !== req.query.state) {
       console.log('Mismatched nonce!', cookie.nonce, req.query.state)
@@ -86,7 +93,7 @@ export default function (ctx) {
       avatar: userData.avatar,
     })
 
-    res.cookie('user', jwt, { secure: process.env.NODE_ENV === 'production' })
+    res.cookie('user', jwt, { secure, sameSite: 'lax', path: '/' })
     res.redirect(ctx.callbackDomain + (cookie.path || '/'))
   })
 

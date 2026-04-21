@@ -1,19 +1,37 @@
-import crypto from 'crypto'
-import mysql from 'mysql2/promise'
+import pg from 'pg'
 import { secretbox, randomBytes } from 'tweetnacl'
-import SignJWT from 'jose/dist/node/cjs/jwt/sign'
-import VerifyJWT from 'jose/dist/node/cjs/jwt/verify'
+import jwt from 'jsonwebtoken'
 
-export const database = mysql.createPool(`mysql://${process.env.MYSQL}/discord-reactive-images?charset=utf8mb4&timezone=Z`)
+const { Pool } = pg
+
+export const database = new Pool({
+  host: process.env.DB_HOST,
+  port: +(process.env.DB_PORT || 5432),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+})
+
+const tablePrefix = process.env.DB_TABLE_PREFIX || 'DRI_'
+export const tables = {
+  configs: `${tablePrefix}configs`,
+  images: `${tablePrefix}images`,
+  overrides: `${tablePrefix}overrides`,
+}
 
 export async function query(statement, values) {
-  const [results, fields] = await database.execute(statement, values)
-  return { results, fields }
+  const result = await database.query(statement, values)
+  return { results: result.rows, fields: result.fields }
 }
 
 
 export const callbackDomain =
-  process.env.NODE_ENV === 'production' ? 'https://discord-reactive-images.fugi.tech' : 'http://localhost:3000'
+  process.env.NODE_ENV === 'production'
+    ? process.env.APP_URL || 'https://dri.maks1mio.su'
+    : process.env.APP_URL || 'http://localhost:3000'
+
+export { cookieShouldBeSecure } from './cookies.js'
 
 export const discordScopes = 'rpc identify'
 
@@ -29,7 +47,7 @@ export function nonce() {
 }
 
 const naclKey = () => Buffer.from(process.env.NACL_KEY, 'base64')
-const jwtKey = () => crypto.createSecretKey(process.env.JWT_KEY, 'base64')
+const jwtKey = () => Buffer.from(process.env.JWT_KEY, 'base64')
 
 export function encrypt(obj) {
   const message = Buffer.from(JSON.stringify(obj))
@@ -46,34 +64,33 @@ export function decrypt(str) {
 }
 
 export async function encodeJWT(obj) {
-  const jwt = await new SignJWT(obj)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(jwtKey())
-
-  return jwt
+  return jwt.sign(obj, jwtKey(), {
+    algorithm: 'HS256',
+    expiresIn: '7d',
+  })
 }
 
-export async function decodeJWT(jwt) {
-  const { payload } = await VerifyJWT(jwt, jwtKey(), {
+export async function decodeJWT(token) {
+  return jwt.verify(token, jwtKey(), {
     algorithms: ['HS256'],
   })
-  return payload
 }
 
 
 export async function getImages(broadcaster_id, guest_id) {
   const ret = {}
 
-  const { results } = await query(`SELECT inactive, speaking FROM images WHERE discord_id = ?`, [guest_id])
+  const { results } = await query(`SELECT inactive, speaking FROM ${tables.images} WHERE discord_id = $1`, [guest_id])
   if (results && results.length) {
     ret.inactive = results[0].inactive
     ret.speaking = results[0].speaking
   }
 
   if (broadcaster_id) {
-    const { results } = await query(`SELECT inactive, speaking FROM overrides WHERE broadcaster_discord_id = ? AND guest_discord_id = ?`, [broadcaster_id, guest_id])
+    const { results } = await query(
+      `SELECT inactive, speaking FROM ${tables.overrides} WHERE broadcaster_discord_id = $1 AND guest_discord_id = $2`,
+      [broadcaster_id, guest_id]
+    )
     if (results && results.length) {
       ret.inactiveOverride = results[0].inactive
       ret.speakingOverride = results[0].speaking

@@ -1,0 +1,89 @@
+// Тёмный фон со «звёздами» (минималистичный паттерн)
+// Перебиваем фон Vuetify, иначе поверх чёрного рисуется surface темы
+html,
+body,
+#__nuxt {
+  background: #000000 !important;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.theme--dark.v-application,
+.theme--dark.v-application .v-application--wrap,
+.v-application.theme--dark,
+.v-application.theme--dark .v-main {
+  background: transparent !important;
+}
+
+.dri-app.theme--dark.v-application,
+.dri-app.theme--dark .v-application--wrap,
+.dri-app .v-main {
+  background: transparent !important;
+}
+
+.dri-starry-bg {
+  position: relative;
+  min-height: 100vh;
+  background-color: #000000;
+  background-image: radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 72% 64%, rgba(255, 255, 255, 0.22), transparent),
+    radial-gradient(1px 1px at 38% 82%, rgba(255, 255, 255, 0.28), transparent),
+    radial-gradient(1px 1px at 88% 12%, rgba(255, 255, 255, 0.18), transparent),
+    radial-gradient(1px 1px at 55% 40%, rgba(255, 255, 255, 0.15), transparent);
+  background-size: 420px 420px, 520px 520px, 380px 380px, 640px 640px, 480px 480px;
+  background-position: 0 0, 120px 80px, 40px 200px, 200px 0, 60px 320px;
+}
+
+.dri-starry-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+  background-image: radial-gradient(1px 1px at 25% 35%, rgba(255, 255, 255, 0.2), transparent),
+    radial-gradient(1px 1px at 65% 22%, rgba(255, 255, 255, 0.18), transparent),
+    radial-gradient(1px 1px at 15% 75%, rgba(255, 255, 255, 0.16), transparent);
+  background-size: 280px 280px, 360px 360px, 320px 320px;
+}
+
+.dri-starry-bg > .v-application--wrap {
+  position: relative;
+  z-index: 1;
+}
+
+.dri-panel {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  background: rgba(20, 20, 20, 0.85) !important;
+  backdrop-filter: blur(8px);
+}
+
+.dri-btn-light {
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: #000000 !important;
+  background: #ffffff !important;
+}
+
+.dri-btn-light:hover {
+  filter: brightness(0.95);
+}
+
+.dri-nav-link {
+  color: rgba(255, 255, 255, 0.55) !important;
+  text-decoration: none !important;
+  font-size: 0.95rem;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.dri-nav-link--active {
+  color: #ffffff !important;
+  border-bottom-color: rgba(255, 255, 255, 0.85);
+}
+
+.dri-muted {
+  color: rgba(255, 255, 255, 0.55) !important;
+}

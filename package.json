@@ -3,38 +3,40 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nuxt-ts",
-    "build": "nuxt-ts build",
-    "start": "nuxt-ts start",
-    "generate": "nuxt-ts generate"
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1.0",
-    "@nuxt/typescript-runtime": "^2.0.0",
-    "@nuxtjs/composition-api": "^0.20.1",
+    "@nuxt/typescript-runtime": "3.0.2",
+    "@nuxtjs/composition-api": "0.34.0",
     "@nuxtjs/redirect-module": "^0.3.1",
     "cookie-parser": "^1.4.5",
     "core-js": "^3.8.2",
+    "express": "^5.2.1",
     "imagemin": "^7.0.1",
     "imagemin-pngquant": "^9.0.1",
-    "jose": "^3.5.0",
+    "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.20",
     "luxon": "^1.25.0",
-    "mysql2": "^2.2.5",
-    "nuxt": "^2.14.12",
+    "nuxt": "2.18.1",
+    "pg": "^8.16.3",
     "sharp": "^0.27.0",
     "tweetnacl": "^1.0.3",
     "ulid": "^2.3.0",
     "ws": "^7.4.2"
   },
   "devDependencies": {
-    "@nuxt/types": "^2.14.12",
-    "@nuxt/typescript-build": "^2.0.3",
-    "@nuxtjs/vuetify": "^1.11.2",
+    "@nuxt/types": "2.18.1",
+    "@nuxt/typescript-build": "3.0.2",
+    "@nuxtjs/vuetify": "^1.12.3",
+    "@types/node": "^20.19.22",
     "eslint-config-prettier": "^7.1.0",
     "eslint-plugin-prettier": "^3.2.0",
     "globby": "^11.0.1",
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "typescript": "^5.9.3"
   }
 }

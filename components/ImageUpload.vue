@@ -1,24 +1,41 @@
 <template>
-  <v-card flat>
-    <v-card-title> {{ title }} </v-card-title>
+  <v-card flat class="dri-panel">
+    <v-card-title class="text-subtitle-1 font-weight-bold"> {{ title }} </v-card-title>
     <v-card-text>
       <v-img class="mb-4" :src="imagePreview" max-height="min(1080px, calc(98vh - 400px))" :aspect-ratio="9 / 16" contain />
 
-      <v-file-input v-model="imageFile" label="New Image" prepend-icon="mdi-camera" accept="image/*" show-size />
+      <v-file-input
+        v-model="imageFile"
+        dark
+        outlined
+        dense
+        label="Новое изображение"
+        prepend-icon="mdi-camera"
+        accept="image/*"
+        show-size
+      />
 
-      <v-btn class="image-upload-save" block color="primary" :disabled="!imageData || imageSaving" :loading="imageSaving" @click="setImage">
-        Save
+      <v-btn
+        class="image-upload-save dri-btn-light"
+        block
+        depressed
+        :disabled="!imageData || imageSaving"
+        :loading="imageSaving"
+        @click="setImage"
+      >
+        Сохранить
       </v-btn>
 
       <v-btn
         class="mt-3 image-upload-revert"
         block
-        color="red"
+        outlined
+        color="white"
         :disabled="!value || imageSaving"
         :loading="imageSaving"
         @click="clearImage"
       >
-        Revert
+        Сброс
       </v-btn>
 
       <v-alert v-if="error" class="mt-4" type="error">
@@ -30,6 +47,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, useContext, watch, toRefs, reactive } from '@nuxtjs/composition-api'
+import { publicImageUrl } from '~/assets/publicImage'
 
 export default defineComponent({
   props: {
@@ -61,7 +79,7 @@ export default defineComponent({
     const { $api } = useContext()
 
     const data = reactive({
-      error: null,
+      error: null as string | null,
       imageFile: <File | null>null,
       imageDataURL: '',
       imageSaving: false,
@@ -70,8 +88,8 @@ export default defineComponent({
     const imagePreview = computed(
       () =>
         data.imageDataURL ||
-        (props.value && `https://cdn.discord-reactive-images.fugi.tech/${props.value}`) ||
-        (props.fallback && `https://cdn.discord-reactive-images.fugi.tech/${props.fallback}`) ||
+        (props.value && publicImageUrl(props.value)) ||
+        (props.fallback && publicImageUrl(props.fallback)) ||
         props.base
     )
 
@@ -109,8 +127,8 @@ export default defineComponent({
         emit('input', image)
         data.imageFile = null
         data.error = null
-      } catch (err) {
-        data.error = err.message
+      } catch (err: any) {
+        data.error = err?.message || String(err)
       }
 
       data.imageSaving = false

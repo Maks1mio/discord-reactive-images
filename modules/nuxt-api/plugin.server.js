@@ -1,6 +1,6 @@
 import Cookie from 'cookie'
 import { API } from './nuxt-api.js'
-import { decodeJWT } from '../api'
+import { decodeJWT } from '../../api/index.js'
 
 export default async function(ctx, inject) {
   const cookies = Cookie.parse(ctx.req.headers.cookie || '')

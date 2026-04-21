@@ -1,7 +1,7 @@
 export default async function(ctx) {
   if (!ctx.$user) throw new Error('Must be logged in')
 
-  const { results } = await ctx.query(`SELECT * FROM configs WHERE discord_id = ?`, [ctx.$user.id])
+  const { results } = await ctx.query(`SELECT * FROM ${ctx.tables.configs} WHERE discord_id = $1`, [ctx.$user.id])
   const config = results && results.length ? results[0] : {}
 
   return {

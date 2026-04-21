@@ -61,7 +61,7 @@ export default function (wss) {
           return
         }
 
-        const { results } = await ctx.query(`SELECT * FROM configs WHERE discord_id = ?`, [localState.user.id])
+        const { results } = await ctx.query(`SELECT * FROM ${ctx.tables.configs} WHERE discord_id = $1`, [localState.user.id])
         const config = results && results.length ? results[0] : {}
 
         ws.send(

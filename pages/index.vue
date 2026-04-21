@@ -1,66 +1,139 @@
 <template>
-  <v-app dark :class="tutorialClass">
-    <v-app-bar app>
-      <v-toolbar-title class="hidden-xs-only">
-        <nuxt-link to="/" exact class="title-link"> Discord Reactive Images </nuxt-link>
+  <v-app dark :class="tutorialClass" class="dri-app">
+    <v-app-bar app flat color="transparent" class="dri-app-bar px-4 px-md-8">
+      <v-toolbar-title class="d-flex align-center">
+        <nuxt-link to="/" exact class="dri-brand text-h6 font-weight-bold white--text text-decoration-none">
+          DRI
+        </nuxt-link>
       </v-toolbar-title>
+      <div class="d-none d-sm-flex align-center ml-8">
+        <nuxt-link to="/" exact class="dri-nav-link dri-nav-link--active mr-6">Главная</nuxt-link>
+      </div>
       <v-spacer />
 
       <template v-if="$user">
-        <v-btn outlined color="green" @click="setTutorial(1)">Tutorial</v-btn>
-        <v-avatar class="ml-4">
-          <img :src="`https://cdn.discordapp.com/avatars/${$user.id}/${$user.avatar}.png?size=64`" />
+        <v-btn text class="mr-2" color="white" outlined rounded @click="setTutorial(1)">Обучение</v-btn>
+        <v-avatar size="36" class="ml-2">
+          <img :src="`https://cdn.discordapp.com/avatars/${$user.id}/${$user.avatar}.png?size=64`" alt="" />
         </v-avatar>
-        <span class="ml-4">{{ $user.username }}#{{ $user.discriminator }}</span>
-        <v-btn class="ml-4" outlined color="red" :href="logout()">Logout</v-btn>
+        <span class="ml-3 d-none d-md-inline text-body-2">{{ $user.username }}#{{ $user.discriminator }}</span>
+        <v-btn class="ml-3" rounded outlined color="white" :href="logout()">Выйти</v-btn>
       </template>
 
-      <template v-else>
-        <v-btn outlined color="primary" :href="login('discord')">Login</v-btn>
-      </template>
     </v-app-bar>
-    <v-main>
-      <v-container :fluid="!!$user">
-        <v-row v-if="!$user" justify="center">
-          <v-col cols="12" lg="10" xl="8">
-            <video src="https://cdn.discord-reactive-images.fugi.tech/dri_promo.mp4" muted autoplay loop></video>
-            <div class="text-h2 text-center mb-4">Easy Discord to OBS integration</div>
-            <div class="text-body-1 mb-4">
-              Discord Reactive Images allows you to easily visualize your Discord voice call in OBS with a single
-              browser source. It's like <a href="https://streamkit.discord.com/overlay">Discord Streamkit</a> but more
-              customizable and easier to use. Just login with Discord, upload an image, join any voice channel and
-              adjust the settings in real time.
-            </div>
-            <v-btn x-large block color="primary" :href="login('discord')">Login</v-btn>
+
+   <v-main :class="{ 'dri-main-landing': !$user }">
+      <v-container :fluid="!!$user" :class="$user ? 'py-8 py-md-12' : 'py-6 px-4'">
+        <v-row v-if="!$user" justify="center" align="center" class="hero-row">
+          <v-col cols="12" sm="11" md="9" lg="8" xl="7" class="d-flex flex-column align-center text-center px-4">
+            <video
+              v-if="promoVideoUrl"
+              class="hero-video mb-10"
+              :src="promoVideoUrl"
+              muted
+              autoplay
+              loop
+              playsinline
+            />
+            <h1 class="text-h4 text-md-h3 font-weight-bold mb-3">Discord Reactive Images</h1>
+            <p class="text-h6 font-weight-medium mb-6 dri-muted">Простая интеграция голосового чата Discord с OBS</p>
+            <p v-if="!showGateForm" class="text-body-1 mb-10 mx-auto dri-hero-text">
+              Discord Reactive Images помогает показать участников голосового канала в OBS через один браузерный
+              источник. Это похоже на
+              <a href="https://streamkit.discord.com/overlay" target="_blank" rel="noopener noreferrer">Discord Streamkit</a
+              >, но с большей гибкостью: загрузите свои изображения, настройте отступы и эффекты в реальном времени.
+            </p>
+
+            <v-alert v-if="showGateForm && needGateHint" type="info" text dense outlined class="mb-6 dri-panel">
+              Сначала введите код доступа, затем можно войти через Discord.
+            </v-alert>
+
+            <template v-if="showGateForm">
+              <v-text-field
+                v-model="accessCode"
+                label="Код доступа"
+                type="password"
+                outlined
+                dark
+                hide-details="auto"
+                class="mb-4"
+                style="max-width: 360px"
+                autocomplete="off"
+                @keyup.enter="submitAccess"
+              />
+              <v-btn class="dri-btn-light px-10" x-large depressed :loading="gateSubmitting" @click="submitAccess">
+                Продолжить
+              </v-btn>
+              <v-alert v-if="gateError" type="error" text dense outlined class="mt-4 dri-panel">{{ gateError }}</v-alert>
+            </template>
+
+            <template v-else>
+              <v-btn class="dri-btn-light px-10" x-large depressed :href="login('discord')">Войти через Discord</v-btn>
+              <div class="mt-4 text-caption dri-muted">Нужен запущенный Discord для полного функционала</div>
+            </template>
           </v-col>
         </v-row>
+
         <v-row v-else>
+          <v-col v-if="showGateForm" cols="12" sm="10" md="8" lg="6" class="mx-auto">
+            <v-card class="dri-panel" flat outlined>
+              <v-card-title class="text-h6 font-weight-bold">Код доступа</v-card-title>
+              <v-card-text>
+                <v-alert v-if="needGateHint" type="info" text dense outlined class="mb-4 dri-panel" border="left">
+                  Сначала введите код доступа.
+                </v-alert>
+                <p class="text-body-2 dri-muted mb-4">
+                  Для ссылок в OBS и загрузки изображений нужен действующий код доступа к сайту.
+                </p>
+                <v-text-field
+                  v-model="accessCode"
+                  label="Код доступа"
+                  type="password"
+                  outlined
+                  dark
+                  hide-details="auto"
+                  class="mb-4"
+                  autocomplete="off"
+                  @keyup.enter="submitAccess"
+                />
+                <v-btn class="dri-btn-light" block large depressed :loading="gateSubmitting" @click="submitAccess">
+                  Продолжить
+                </v-btn>
+                <v-alert v-if="gateError" type="error" text dense outlined class="mt-4 dri-panel">{{ gateError }}</v-alert>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <template v-else>
           <v-col cols="12">
-            <v-alert v-if="error" class="mb-0" type="error" outlined>
+            <v-alert v-if="error" class="mb-4 dri-panel" type="error" outlined border="left">
               {{ error }}
             </v-alert>
           </v-col>
           <v-col cols="12" md="4" lg="6" order-md="last">
-            <v-card class="mb-4 links">
-              <v-card-title> Links </v-card-title>
+            <v-card class="mb-4 links dri-panel" flat>
+              <v-card-title class="text-h6 font-weight-bold">Ссылки для OBS</v-card-title>
               <v-card-text>
                 <v-text-field
                   v-for="l in links"
                   :key="`link-${l.value}`"
                   :class="l.class"
+                  dark
+                  outlined
+                  dense
                   :label="l.label"
                   :value="l.value"
                   readonly
+                  hide-details
+                  class="mb-3"
                 >
                   <template slot="append">
                     <v-tooltip top>
                       <template v-slot:activator="{ on, attrs }">
-                        <v-btn icon @click.prevent="copyText(l.value)" v-bind="attrs" v-on="on">
-                          <v-icon>mdi-content-copy</v-icon>
+                        <v-btn icon small @click.prevent="copyText(l.value)" v-bind="attrs" v-on="on">
+                          <v-icon small>mdi-content-copy</v-icon>
                         </v-btn>
                       </template>
-
-                      <span>Copy to Clipboard</span>
+                      <span>Скопировать</span>
                     </v-tooltip>
                   </template>
                   <template slot="append-outer">
@@ -75,26 +148,26 @@
                             <v-btn
                               class="source-settings"
                               icon
+                              small
                               v-bind="{ ...dialogA, ...tooltipA }"
                               v-on="{ ...dialogO, ...tooltipO }"
                               :disabled="!l.settings"
                             >
-                              <v-icon>mdi-cog</v-icon>
+                              <v-icon small>mdi-cog</v-icon>
                             </v-btn>
                           </template>
-
-                          <span>Settings</span>
+                          <span>Настройки</span>
                         </v-tooltip>
                       </template>
 
-                      <v-card v-if="l.settings" class="source-settings-modal">
-                        <v-card-title class="justify-center">{{ l.settings.name }} Settings</v-card-title>
+                      <v-card v-if="l.settings" class="source-settings-modal dri-panel">
+                        <v-card-title class="justify-center">{{ l.settings.name }} — изображения</v-card-title>
                         <v-card-text>
                           <v-row justify="center">
                             <v-col cols="12" sm="6">
                               <image-upload
                                 class="inactive-image"
-                                title="Set Inactive Image"
+                                title="Изображение «тишина»"
                                 v-model="l.settings.inactive"
                                 :fallback="l.settings.speaking"
                                 :base="l.settings.inactiveBase"
@@ -105,63 +178,65 @@
                             <v-col cols="12" sm="6">
                               <image-upload
                                 class="speaking-image"
-                                title="Set Speaking Image"
+                                title="Изображение «говорю»"
                                 v-model="l.settings.speaking"
                                 :fallback="l.settings.inactive"
                                 :base="l.settings.speakingBase"
                                 :user="l.settings.id"
                                 purpose="speaking"
                               />
-                            </v-col> </v-row
-                        ></v-card-text>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
                       </v-card>
                     </v-dialog>
                   </template>
                 </v-text-field>
 
-                <div class="text-caption links-warning">
-                  Copy one of the links above and add it to OBS as a browser source. Set the height & width to the max
-                  size you're willing for the images to take up.
-                  <strong>Warning:</strong> Images can re-arrange or re-size when users join or leave, so do not rely on
-                  this to hide sensitive information like Among Us room codes.
+                <div class="text-caption links-warning dri-muted">
+                  Скопируйте одну из ссылок и добавьте её в OBS как браузерный источник. Задайте ширину и высоту под вашу
+                  сцену.
+                  <strong>Внимание:</strong> расположение и размер картинок могут меняться при входе и выходе участников —
+                  не используйте это для сокрытия конфиденциальных данных (например, кодов игры).
                 </div>
               </v-card-text>
             </v-card>
 
-            <v-card class="config">
-              <v-card-title> Config </v-card-title>
+            <v-card class="config dri-panel" flat>
+              <v-card-title class="text-h6 font-weight-bold">Настройки источника</v-card-title>
               <v-card-text>
                 <v-form @submit.prevent="saveConfig">
-                  <v-checkbox class="bounce" label="Bounce Effect" v-model="config.bounce" hide-details></v-checkbox>
+                  <v-checkbox
+                    class="bounce"
+                    dark
+                    label="Эффект подпрыгивания при речи"
+                    v-model="config.bounce"
+                    hide-details
+                  />
                   <v-checkbox
                     class="include-self"
-                    label="Include Own Image in Group view"
+                    dark
+                    label="Показывать себя в групповом виде"
                     v-model="config.includeSelf"
                     hide-details
-                  ></v-checkbox>
+                  />
 
                   <v-slider
                     class="mt-4 image-spacing"
-                    label="Image Spacing"
+                    dark
+                    label="Отступ между изображениями"
                     v-model="config.gapPercentage"
                     min="-500"
                     max="50"
                     thumb-label
                     hide-details
-                  ></v-slider>
+                  />
 
-                  <v-btn
-                    class="mt-4"
-                    block
-                    color="primary"
-                    type="submit"
-                    :disabled="configSaving"
-                    :loading="configSaving"
-                  >
-                    Apply
+                  <v-btn class="mt-6 dri-btn-light" block large depressed type="submit" :disabled="configSaving" :loading="configSaving">
+                    Применить
                   </v-btn>
 
-                  <v-alert v-if="configError" class="mt-4" type="error">
+                  <v-alert v-if="configError" class="mt-4" type="error" outlined dense>
                     {{ configError }}
                   </v-alert>
                 </v-form>
@@ -171,7 +246,7 @@
           <v-col cols="12" sm="6" md="4" lg="3">
             <image-upload
               class="inactive-image"
-              title="Set Inactive Image"
+              title="Изображение «тишина»"
               v-model="currentImages.inactive"
               :fallback="currentImages.speaking"
               :base="currentImages.base"
@@ -182,7 +257,7 @@
           <v-col cols="12" sm="6" md="4" lg="3">
             <image-upload
               class="speaking-image"
-              title="Set Speaking Image"
+              title="Изображение «говорю»"
               v-model="currentImages.speaking"
               :fallback="currentImages.inactive"
               :base="currentImages.base"
@@ -190,103 +265,106 @@
               purpose="speaking"
             />
           </v-col>
+          </template>
         </v-row>
       </v-container>
     </v-main>
-    <v-footer>
-      <div class="text-caption">
-        Made by <a href="https://twitter.com/Fugiman">Fugi</a>.
-        <a href="https://github.com/Fugiman/discord-reactive-images">Source code available on Github</a>. For issues or
-        suggestions @ me on Twitter or file an issue on Github.
-        <a href="https://paypal.me/fugiman" target="_blank">Donate</a> if you'd like.
-      </div>
+
+    <v-footer class="dri-footer transparent pt-8 pb-12">
+      <v-container>
+        <div class="text-caption text-center dri-muted">
+          Оригинальный проект:
+          <a href="https://twitter.com/Fugiman" target="_blank" rel="noopener noreferrer" class="white--text">Fugi</a>.
+          <a href="https://github.com/Fugiman/discord-reactive-images" target="_blank" rel="noopener noreferrer" class="white--text"
+            >Исходный код на GitHub</a
+          >.
+          <a href="https://paypal.me/fugiman" target="_blank" rel="noopener noreferrer" class="white--text">Поддержать</a>.
+        </div>
+      </v-container>
     </v-footer>
-    <v-overlay v-if="tutorial > 0" opacity="0.9">
+
+    <v-overlay v-if="tutorial > 0" opacity="0.92">
       <tutorial-step :step="1" bottom>
-        Welcome to Discord Reactive Images. This site allows you to visualize a Discord call in your stream. In this
-        tutorial we will explain how to set your image, configure the browser source, and add it to OBS.
+        Добро пожаловать в Discord Reactive Images. Здесь вы настраиваете картинки для трансляции голосового чата. В
+        этом обучении: свои изображения, ссылки для OBS и параметры отображения.
       </tutorial-step>
       <tutorial-step :step="2" activator=".inactive-image" right>
-        The Inactive Image is what is displayed when not speaking. By default it is a dimmed version of your Discord
-        avatar.
+        «Тишина» — картинка, когда вы не говорите. По умолчанию это приглушённый аватар Discord.
       </tutorial-step>
       <tutorial-step :step="3" activator=".inactive-image .v-file-input" right>
-        To upload a custom Inactive Image, click the New Image field. A file browser will appear for you to select any
-        image you'd like from your computer.
+        Чтобы загрузить своё изображение, нажмите поле выбора файла и укажите файл на компьютере.
       </tutorial-step>
       <tutorial-step :step="4" activator=".inactive-image .image-upload-save" right>
-        After selecting your image, press SAVE to upload it, and it will update all Browser Sources without needing a
-        refresh.
+        После выбора нажмите «Сохранить» — изображение загрузится и обновится во всех браузерных источниках без перезагрузки.
       </tutorial-step>
       <tutorial-step :step="5" activator=".inactive-image .image-upload-revert" right>
-        If you would like to return to using your Discord avatar instead of a custom image, press REVERT at any time.
+        «Сброс» возвращает аватар Discord вместо загруженного файла.
       </tutorial-step>
       <tutorial-step :step="6" activator=".speaking-image" right>
-        The Speaking Image is what is displayed when you speak in your Discord voice call. By default it is the undimmed
-        version of the Inactive Image.
+        «Говорю» — картинка во время речи. По умолчанию совпадает с активным вариантом «тишины», но без затемнения.
       </tutorial-step>
       <tutorial-step :step="7" activator=".speaking-image" right>
-        Uploading a custom Speaking Image and saving it works exactly the same as the Inactive Image. Likewise, REVERT
-        will set the Speaking Image to the same as the Inactive Image.
+        Загрузка и сохранение для «говорю» работают так же. «Сброс» выставит то же изображение, что и для «тишины».
       </tutorial-step>
       <tutorial-step :step="8" activator=".links" left>
-        Links are the URLs for you to input into OBS (or other streaming software) as a Browser Source.
+        В блоке «Ссылки» — URL для вставки в OBS (или другое ПО) как браузерный источник.
       </tutorial-step>
       <tutorial-step :step="9" activator=".links .group-source" left>
-        The Group Source includes an image for every person in your voice call automatically. It is the easiest to set
-        up and works well if the people in your call change frequently, but lacks the control of Individual sources.
+        Групповой источник показывает всех в канале — удобно, если состав часто меняется.
       </tutorial-step>
       <tutorial-step :step="10" activator=".links .self-source" left>
-        Your Individual Source contains just your image. It allows you to make yourself bigger than others in the call,
-        but does still require you to be in a Discord voice call.
+        Индивидуальный источник — только вы. Удобно сделать себя крупнее; всё равно нужен активный голосовой канал.
       </tutorial-step>
       <tutorial-step :step="11" activator=".links .other-source" left>
-        Other members of your voice call will also appear in the Links list as Individual Sources. If you know who will
-        be in the call ahead of time, the Individual Sources allow more freedom in how you arrange the sizing and
-        position of your guests.
+        Остальные участники появятся отдельными индивидуальными ссылками — можно заранее расставить их на сцене.
       </tutorial-step>
       <tutorial-step :step="12" activator=".links .other-source .source-settings" left>
-        In addition, you can customize the images for each guest by clicking the Settings Cog.
+        У гостей можно открыть шестерёнку и задать свои картинки «тишина» / «говорю».
       </tutorial-step>
       <tutorial-step :step="13" activator="" bottom>
-        Clicking the Settings Cog will bring up a window with the Inactive and Speaking Images for that person.
-        Uploading and Saving images works the same as previously described. REVERT sets the image back to what the other
-        person uploaded, restoring their control over their appearence.
+        В окне настроек гостя загрузка и «Сброс» работают так же. «Сброс» возвращает изображения, заданные самим участником.
       </tutorial-step>
       <tutorial-step :step="14" activator=".links .links-warning" left>
-        Please do not miss the warning: These images can move or change at any time and should not be relied upon to
-        obscure content, such as codes.
+        Учтите предупреждение: картинки могут смещаться и менять размер — не полагайтесь на них для сокрытия важной информации.
       </tutorial-step>
       <tutorial-step :step="15" activator=".config" left>
-        Config allows you to adjust the appearence and functionality of the Browser Sources.
+        Здесь настраивается поведение и внешний вид браузерных источников.
       </tutorial-step>
       <tutorial-step :step="16" activator=".config .bounce" left>
-        Bounce Effect will cause the image to "bounce" up and down 10 pixels every time they begin speaking. It draws
-        extra attention to the speaker but can be distracting.
+        «Подпрыгивание» слегка сдвигает картинку вверх-вниз при начале речи — заметнее, но может отвлекать.
       </tutorial-step>
       <tutorial-step :step="17" activator=".config .include-self" left>
-        Include Own Image in Group View determines whether your own image appears in the Group Browser Source. Disable
-        this if you use an Individual Source or have some other way of representing yourself.
+        «Показывать себя в групповом виде» — включите или скройте свой аватар в групповом источнике.
       </tutorial-step>
       <tutorial-step :step="18" activator=".config .image-spacing" left>
-        Image Spacing controls how spread apart images are in the Group Source. Positive numbers add a gap between
-        images, negative numbers overlap the images. Useful if the images have transparent backgrounds and are wide.
+        «Отступ» задаёт расстояние между аватарами в групповом режиме: положительные значения — зазор, отрицательные — перекрытие.
       </tutorial-step>
-      <tutorial-step :step="19" activator=".config .v-btn.primary" left>
-        Any changes to the config will not take effect until you press the APPLY button, at which point it will update
-        all Browser Sources without needing a refresh.
+      <tutorial-step :step="19" activator=".config .v-btn" left>
+        Изменения применяются после нажатия «Применить» и сразу отражаются в открытых источниках.
       </tutorial-step>
-      <tutorial-step :step="20" activator=".v-footer" final top>
-        That covers all the features of the site. Thank you for trying out Discord Reactive Images! If you need any help
-        please reach out to me on Twitter or Github.
+      <tutorial-step :step="20" activator=".dri-footer" final top>
+        На этом всё. Если нужна помощь — загляните в репозиторий на GitHub или к автору оригинала. Спасибо, что пользуетесь сервисом!
       </tutorial-step>
     </v-overlay>
   </v-app>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, useContext, useStore, toRefs, reactive, ref } from '@nuxtjs/composition-api'
+import {
+  defineComponent,
+  computed,
+  useContext,
+  useStore,
+  toRefs,
+  reactive,
+  ref,
+  onMounted,
+} from '@nuxtjs/composition-api'
 import { useDiscordRPC } from '~/assets/discordrpc'
+import { publicImageUrl } from '~/assets/publicImage'
+
+/** Демо-аватар для шага обучения (Discord CDN, без вашего хранилища) */
+const DEMO_EMBED_AVATAR = 'https://cdn.discordapp.com/embed/avatars/2.png'
 
 interface State {
   tutorial: Number
@@ -312,6 +390,13 @@ export default defineComponent({
     const { $api, $user, $route } = useContext()
     const store = useStore<State>()
 
+    const promoVideoUrl = process.env.PROMO_VIDEO_URL || ''
+    const gateEnabled = process.env.SITE_GATE_ENABLED === '1'
+    const gateOk = ref(!gateEnabled)
+    const accessCode = ref('')
+    const gateError = ref<string | null>(null)
+    const gateSubmitting = ref(false)
+
     const login = (platform: string) => `/auth/${platform}/login?path=${encodeURIComponent($route?.fullPath || '/')}`
     const logout = () => `/auth/logout?path=${encodeURIComponent($route?.fullPath || '/')}`
 
@@ -323,6 +408,48 @@ export default defineComponent({
     })
     const setTutorial = (step: number) => store.commit('setTutorial', step)
 
+    const needGateHint = computed(() => $route?.query?.need_gate === '1')
+    const showGateForm = computed(() => gateEnabled && !gateOk.value)
+
+    const siteOrigin = computed(() => {
+      if (typeof window !== 'undefined') return window.location.origin
+      return (process.env.APP_URL || '').replace(/\/$/, '') || ''
+    })
+
+    async function submitAccess() {
+      gateError.value = null
+      gateSubmitting.value = true
+      try {
+        const origin = typeof window !== 'undefined' ? window.location.origin : ''
+        const r = await fetch(`${origin}/access/verify`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: accessCode.value }),
+        })
+        const d = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          gateError.value = (d as { error?: string })?.error || 'Неверный код'
+          return
+        }
+        gateOk.value = true
+      } catch (_) {
+        gateError.value = 'Не удалось проверить код'
+      } finally {
+        gateSubmitting.value = false
+      }
+    }
+
+    onMounted(async () => {
+      if (!gateEnabled) return
+      try {
+        const origin = typeof window !== 'undefined' ? window.location.origin : ''
+        const r = await fetch(`${origin}/access/check`, { credentials: 'include' })
+        const d = await r.json().catch(() => ({}))
+        if ((d as { ok?: boolean }).ok) gateOk.value = true
+      } catch (_) {}
+    })
+
     if (!$user) {
       return {
         login,
@@ -330,19 +457,27 @@ export default defineComponent({
         tutorial,
         tutorialClass,
         setTutorial,
+        promoVideoUrl,
+        gateOk,
+        accessCode,
+        gateError,
+        gateSubmitting,
+        needGateHint,
+        showGateForm,
+        submitAccess,
       }
     }
 
     const { members, config, error } = useDiscordRPC()
 
     const data = reactive({
-      configError: null,
+      configError: null as string | null,
       configSaving: false,
     })
 
     const currentImages = ref({
-      inactive: null,
-      speaking: null,
+      inactive: null as string | null,
+      speaking: null as string | null,
       base: '',
     })
     $api.get_image($user.id).then((v: any) => {
@@ -357,43 +492,41 @@ export default defineComponent({
     })
 
     const links = computed(() => {
+      const origin = siteOrigin.value
       const r: Link[] = [
         {
-          label: 'Group Browser Source',
-          value: 'https://discord-reactive-images.fugi.tech/group',
+          label: 'Групповой браузерный источник',
+          value: `${origin}/group`,
           class: 'group-source',
         },
         {
-          label: 'Individual Browser Source (You)',
-          value: `https://discord-reactive-images.fugi.tech/individual/${$user && $user.id}`,
+          label: 'Индивидуальный источник (вы)',
+          value: `${origin}/individual/${$user && $user.id}`,
           class: 'self-source',
         },
       ]
 
       if (tutorial.value > 0) {
         r.push({
-          label: `Individual Browser Source (FriendA)`,
-          value: `https://discord-reactive-images.fugi.tech/individual/00000000000000001`,
+          label: 'Индивидуальный источник (ДругА)',
+          value: `${origin}/individual/00000000000000001`,
           class: 'other-source',
           settings: {
             id: '00000000000000001',
-            name: 'FriendA',
-            speakingBase:
-              'https://cdn.discord-reactive-images.fugi.tech/f324bfce399f6ec885658d3da0e33c7040c52dcc7135015cdba6b9222a0baeff.png',
-            inactiveBase:
-              'https://cdn.discord-reactive-images.fugi.tech/f324bfce399f6ec885658d3da0e33c7040c52dcc7135015cdba6b9222a0baeff.png',
+            name: 'ДругА',
+            speakingBase: DEMO_EMBED_AVATAR,
+            inactiveBase: DEMO_EMBED_AVATAR,
           },
         })
         r.push({
-          label: `Individual Browser Source (FriendB)`,
-          value: `https://discord-reactive-images.fugi.tech/individual/00000000000000002`,
+          label: 'Индивидуальный источник (ДругБ)',
+          value: `${origin}/individual/00000000000000002`,
+          class: 'other-source',
           settings: {
             id: '00000000000000002',
-            name: 'FriendB',
-            speakingBase:
-              'https://cdn.discord-reactive-images.fugi.tech/f324bfce399f6ec885658d3da0e33c7040c52dcc7135015cdba6b9222a0baeff.png',
-            inactiveBase:
-              'https://cdn.discord-reactive-images.fugi.tech/f324bfce399f6ec885658d3da0e33c7040c52dcc7135015cdba6b9222a0baeff.png',
+            name: 'ДругБ',
+            speakingBase: DEMO_EMBED_AVATAR,
+            inactiveBase: DEMO_EMBED_AVATAR,
           },
         })
         return r
@@ -401,20 +534,20 @@ export default defineComponent({
 
       for (const m of otherMembers.value) {
         r.push({
-          label: `Individual Browser Source (${m.name})`,
-          value: `https://discord-reactive-images.fugi.tech/individual/${m.id}`,
+          label: `Индивидуальный источник (${m.name})`,
+          value: `${origin}/individual/${m.id}`,
           settings: {
             id: m.id,
             name: m.name,
             speaking: m.rawImages?.speakingOverride,
             inactive: m.rawImages?.inactiveOverride,
             speakingBase:
-              (m.rawImages?.speaking && `https://cdn.discord-reactive-images.fugi.tech/${m.rawImages?.speaking}`) ||
-              (m.rawImages?.inactive && `https://cdn.discord-reactive-images.fugi.tech/${m.rawImages?.inactive}`) ||
+              publicImageUrl(m.rawImages?.speaking) ||
+              publicImageUrl(m.rawImages?.inactive) ||
               `https://cdn.discordapp.com/avatars/${m.id}/${m.avatar}.png?size=1024`,
             inactiveBase:
-              (m.rawImages?.inactive && `https://cdn.discord-reactive-images.fugi.tech/${m.rawImages?.inactive}`) ||
-              (m.rawImages?.speaking && `https://cdn.discord-reactive-images.fugi.tech/${m.rawImages?.speaking}`) ||
+              publicImageUrl(m.rawImages?.inactive) ||
+              publicImageUrl(m.rawImages?.speaking) ||
               `https://cdn.discordapp.com/avatars/${m.id}/${m.avatar}.png?size=1024`,
           },
         })
@@ -435,6 +568,14 @@ export default defineComponent({
       currentImages,
       otherMembers,
       links,
+      promoVideoUrl,
+      gateOk,
+      accessCode,
+      gateError,
+      gateSubmitting,
+      needGateHint,
+      showGateForm,
+      submitAccess,
       copyText(text: string) {
         navigator.clipboard.writeText(text)
       },
@@ -449,8 +590,8 @@ export default defineComponent({
           })
 
           data.configError = null
-        } catch (err) {
-          data.configError = err.message
+        } catch (err: any) {
+          data.configError = err?.message || String(err)
         }
 
         data.configSaving = false
@@ -463,6 +604,51 @@ export default defineComponent({
 <style>
 .inactive-image .v-image {
   filter: brightness(50%);
+}
+
+.dri-app .v-application--wrap {
+  background: transparent !important;
+}
+
+.dri-app-bar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.dri-hero-text {
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.65;
+}
+
+.dri-hero-text a {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
+
+
+.dri-main-landing {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+.dri-main-landing .v-main__wrap {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-video {
+  display: block;
+  margin: 0 auto 40px;
+  max-width: 100%;
+  max-height: 420px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dri-footer a {
+  text-decoration: underline;
 }
 
 .tutorial-02 .inactive-image,
@@ -482,11 +668,11 @@ export default defineComponent({
 .tutorial-16 .config .bounce,
 .tutorial-17 .config .include-self,
 .tutorial-18 .config .image-spacing,
-.tutorial-19 .config .v-btn.primary,
-.tutorial-20 .v-footer {
+.tutorial-19 .config .v-btn,
+.tutorial-20 .dri-footer {
   z-index: 6 !important;
   position: relative !important;
-  box-shadow: 0 0 16px #1976d2 !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.35) !important;
   border-radius: 12px !important;
   pointer-events: none !important;
 }
@@ -506,12 +692,5 @@ export default defineComponent({
 .title-link {
   color: inherit !important;
   text-decoration: none;
-}
-
-video {
-  display: block;
-  margin: 0 auto 40px;
-  max-width: 100%;
-  max-height: 720px;
 }
 </style>

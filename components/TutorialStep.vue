@@ -18,10 +18,10 @@
       <slot />
     </div>
     <div class="my-2 d-flex">
-      <v-btn v-if="!final" outlined color="red" @click="setTutorial(0)">Exit</v-btn>
+      <v-btn v-if="!final" outlined color="red" @click="setTutorial(0)">Выйти</v-btn>
       <v-spacer />
-      <v-btn v-if="final" outlined color="green" @click="setTutorial(0)">Finish</v-btn>
-      <v-btn v-else outlined color="green" @click="setTutorial(step + 1)">Next</v-btn>
+      <v-btn v-if="final" outlined color="green" @click="setTutorial(0)">Готово</v-btn>
+      <v-btn v-else outlined color="green" @click="setTutorial(step + 1)">Далее</v-btn>
     </div>
   </v-tooltip>
 </template>
