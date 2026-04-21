@@ -1,7 +1,15 @@
 import bodyParser from 'body-parser'
-import { API } from '../../.nuxt/nuxt-api.js'
 import { decodeJWT } from '../../api'
 import { siteGateEnabled, verifyGateCookie } from '../../api/gate.js'
+
+/** Ленивая загрузка: при `nuxt build` файла `.nuxt/nuxt-api.js` ещё нет, пока не сгенерированы шаблоны. */
+let nuxtApiModulePromise = null
+function loadNuxtApi() {
+  if (!nuxtApiModulePromise) {
+    nuxtApiModulePromise = import('../../.nuxt/nuxt-api.js')
+  }
+  return nuxtApiModulePromise
+}
 
 const parser = bodyParser.json({
   limit: '50mb',
@@ -70,6 +78,7 @@ export default (globalState) => {
       return
     }
 
+    const { API } = await loadNuxtApi()
     const api = API(globalState, $user)
 
     const key = req.body.method.join('.')
