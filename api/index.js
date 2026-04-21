@@ -30,8 +30,15 @@ export const callbackDomain = oauthCallbackDomain()
 
 export { cookieShouldBeSecure }
 
-/** Как в Discord Portal → OAuth2 URL Generator: identify + rpc + email (порядок как в UI). */
-export const discordScopes = 'identify rpc email'
+/**
+ * Scopes редиректа https://discord.com/oauth2/authorize (вход на сайт).
+ * По умолчанию без `rpc`: у многих приложений Discord возвращает invalid_scope в браузере.
+ * Сам scope `rpc` для голоса/RPC запрашивается у клиента Discord командой AUTHORIZE в assets/discordrpc.ts (после ws://127.0.0.1:6463).
+ * Если вашему приложению Discord разрешён rpc в веб-OAuth: DISCORD_WEB_OAUTH_SCOPES="identify email rpc"
+ */
+export const discordScopes = (
+  process.env.DISCORD_WEB_OAUTH_SCOPES || 'identify email'
+).trim()
 
 export function nonce() {
   const word_characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'

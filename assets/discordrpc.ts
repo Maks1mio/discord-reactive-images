@@ -327,6 +327,7 @@ export function useDiscordRPC() {
 
     async evt_READY() {
       if (!config.value.token) {
+        /** Здесь запрашивается `rpc` у локального Discord — не путать с scopes веб-логина в auth/discord.js */
         const d = <AuthorizeResponse>await s.request('AUTHORIZE', {
           client_id: rpcClientId,
           scopes: ['rpc', 'identify'],

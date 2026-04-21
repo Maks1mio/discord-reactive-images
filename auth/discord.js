@@ -100,6 +100,25 @@ export default function (ctx) {
         return
       }
 
+      if (req.query.error) {
+        const code = String(req.query.error)
+        const raw =
+          typeof req.query.error_description === 'string' ? req.query.error_description : ''
+        const desc = raw ? decodeURIComponent(raw.replace(/\+/g, ' ')) : ''
+        console.log('Discord OAuth redirect error', code, desc)
+        const hint =
+          code === 'invalid_scope'
+            ? ' Обычно это лишний scope «rpc» в браузерном OAuth — он не нужен для входа на сайт (RPC запрашивается отдельно у клиента Discord).'
+            : ''
+        res.status(400).send(`Discord: ${code}${desc ? ` — ${desc}` : ''}.${hint}`)
+        return
+      }
+
+      if (!req.query.code) {
+        res.status(400).send('Нет code в ответе Discord — начните вход с сайта.')
+        return
+      }
+
       const tokenResp = await fetch(`https://discord.com/api/oauth2/token`, {
         method: 'POST',
         headers: {
