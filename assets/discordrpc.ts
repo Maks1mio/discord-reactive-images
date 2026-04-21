@@ -291,10 +291,19 @@ export function useDiscordRPC() {
       }
     },
 
-    _handleClose(e: { code: number }) {
+    _handleClose(e: CloseEvent | { code: number; reason?: string }) {
       console.error('WS Closed: ', e)
-      error.value =
-        'Соединение с локальным Discord (RPC) потеряно. Проверьте: Discord запущен; в Developer Portal у приложения указан тот же DISCORD_ID; в OAuth2 добавлен RPC origin страницы (например http://localhost:3000) и redirect callback; для непубличного приложения ваш аккаунт в списке тестеров. Затем обновите страницу.'
+      const code = e.code
+      const reason = 'reason' in e && e.reason ? String(e.reason) : ''
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+
+      if (code === 4002 || reason.includes('Invalid Origin')) {
+        error.value =
+          `Discord отклонил RPC: неверный Origin. В Discord Developer Portal → OAuth2 добавьте в список разрешённых **origin** (RPC / URL Validation) **точно** «${origin}» (без слэша в конце; схема и хост должны совпадать с адресом этой вкладки — например http://localhost:3000 для dev и https://… для продакшена). Сохраните в Portal, перезапустите Discord и обновите страницу.`
+      } else {
+        error.value =
+          'Соединение с локальным Discord (RPC) потеряно. Проверьте: клиент Discord запущен; DISCORD_ID совпадает с приложением; в Portal указаны origin этой страницы и redirect OAuth; для непубличного приложения ваш аккаунт в тестерах. Затем обновите страницу.'
+      }
       channelID = null
 
       if (socket) {
@@ -304,7 +313,7 @@ export function useDiscordRPC() {
         socket = null
       }
 
-      const tries = e.code === 1006 ? ++connectionTries : 0
+      const tries = code === 1006 ? ++connectionTries : 0
       const backoff = Math.pow(2, Math.floor(tries / 10))
       setTimeout(() => s.connect(tries), backoff)
     },

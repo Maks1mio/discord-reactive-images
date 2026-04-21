@@ -1,6 +1,7 @@
 import pg from 'pg'
 import { secretbox, randomBytes } from 'tweetnacl'
 import jwt from 'jsonwebtoken'
+import { oauthCallbackDomain, cookieShouldBeSecure } from './cookies.js'
 
 const { Pool } = pg
 
@@ -25,15 +26,12 @@ export async function query(statement, values) {
   return { results: result.rows, fields: result.fields }
 }
 
+export const callbackDomain = oauthCallbackDomain()
 
-export const callbackDomain =
-  process.env.NODE_ENV === 'production'
-    ? process.env.APP_URL || 'https://dri.maks1mio.su'
-    : process.env.APP_URL || 'http://localhost:3000'
+export { cookieShouldBeSecure }
 
-export { cookieShouldBeSecure } from './cookies.js'
-
-export const discordScopes = 'rpc identify'
+/** Как в Discord Portal → OAuth2 URL Generator: identify + rpc + email (порядок как в UI). */
+export const discordScopes = 'identify rpc email'
 
 export function nonce() {
   const word_characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
