@@ -105,9 +105,8 @@ export function useDiscordRPC() {
   }
 
   const recalculateMembers = () => {
-    visibleMembers.value = Array.from(members.values())
-      .filter((m) => avatars.has(m.id))
-      .map((m) => {
+    /** Не требовать avatars.has: иначе /group и /individual пустые, пока не ответит WS /api (или без JWT — тогда всё равно CDN по m.avatar). */
+    visibleMembers.value = Array.from(members.values()).map((m) => {
         const images = avatars.get(m.id)
         const inactive = images && images.inactive ? publicImageUrl(images.inactive) : null
         const speaking = images && images.speaking ? publicImageUrl(images.speaking) : null
@@ -157,7 +156,7 @@ export function useDiscordRPC() {
           }
         }
         configSocket.onclose = (err) => {
-          console.error('Config WS failed:', err)
+          console.error('WebSocket конфига (/api на этом же хосте) закрыт, переподключение:', err)
           configSocket = null
           setTimeout(connect, 1000)
         }
@@ -292,14 +291,22 @@ export function useDiscordRPC() {
     },
 
     _handleClose(e: CloseEvent | { code: number; reason?: string }) {
-      console.error('WS Closed: ', e)
       const code = e.code
       const reason = 'reason' in e && e.reason ? String(e.reason) : ''
+      console.warn(
+        `[Discord RPC] ws://127.0.0.1:6463 закрыт (локальный клиент Discord, не ваш /api). code=${code} reason=${reason || '(нет)'}`
+      )
       const origin = typeof window !== 'undefined' ? window.location.origin : ''
 
-      if (code === 4002 || reason.includes('Invalid Origin')) {
+      if (code === 4001 || code === 4002 || reason.includes('Invalid Origin')) {
+        const alt =
+          origin.includes('127.0.0.1') && !origin.includes('localhost')
+            ? ' Либо откройте сайт по http://localhost:3000 (это другой origin, чем 127.0.0.1).'
+            : origin.includes('localhost') && !origin.includes('127.0.0.1')
+              ? ' Если заходите с 127.0.0.1 — добавьте и http://127.0.0.1:3000.'
+              : ''
         error.value =
-          `Discord отклонил RPC: неверный Origin. В Discord Developer Portal → OAuth2 добавьте в список разрешённых **origin** (RPC / URL Validation) **точно** «${origin}» (без слэша в конце; схема и хост должны совпадать с адресом этой вкладки — например http://localhost:3000 для dev и https://… для продакшена). Сохраните в Portal, перезапустите Discord и обновите страницу.`
+          `Discord отклонил RPC: неверный Origin. В Developer Portal → OAuth2 → разрешённые origin (RPC / URL Validation) добавьте **точно** «${origin}» (без слэша в конце).${alt} localhost и 127.0.0.1 — разные origin: в списке должны быть оба, если пользуетесь обоими. Сохраните в Portal, полностью перезапустите Discord и обновите страницу.`
       } else {
         error.value =
           'Соединение с локальным Discord (RPC) потеряно. Проверьте: клиент Discord запущен; DISCORD_ID совпадает с приложением; в Portal указаны origin этой страницы и redirect OAuth; для непубличного приложения ваш аккаунт в тестерах. Затем обновите страницу.'

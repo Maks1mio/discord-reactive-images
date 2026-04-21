@@ -4,6 +4,38 @@ import { Router } from 'express'
 import { siteGateEnabled, verifyGateCookie } from '../api/gate.js'
 import { cookieShouldBeSecure } from '../api/cookies.js'
 
+const OAUTH_STATE_TTL_MS = 15 * 60 * 1000
+
+/** state → { path, ts } — если cookie login не дошла, callback всё равно валидирует state (один процесс; при нескольких воркерах нужен общий store). */
+const pendingOAuth = new Map()
+
+function prunePendingOAuth() {
+  const now = Date.now()
+  for (const [k, v] of pendingOAuth) {
+    if (now - v.ts > OAUTH_STATE_TTL_MS) pendingOAuth.delete(k)
+  }
+}
+
+/**
+ * Как в Discord Portal: client_id, response_type, redirect_uri, scope с «+», затем state и prompt.
+ * Не querystring.stringify — иначе scope даёт %20 вместо «+».
+ */
+function discordAuthorizeQuery(ctx, state) {
+  const redirectUri = `${ctx.callbackDomain}/auth/discord/callback`
+  const scopePlus = String(ctx.discordScopes || '')
+    .trim()
+    .split(/\s+/)
+    .join('+')
+  return [
+    `client_id=${encodeURIComponent(process.env.DISCORD_ID)}`,
+    `response_type=code`,
+    `redirect_uri=${encodeURIComponent(redirectUri)}`,
+    `scope=${scopePlus}`,
+    `state=${encodeURIComponent(state)}`,
+    `prompt=consent`,
+  ].join('&')
+}
+
 export default function (ctx) {
   const app = Router()
   const secure = cookieShouldBeSecure()
@@ -14,51 +46,57 @@ export default function (ctx) {
     }
 
     const n = ctx.nonce()
+    const path = req.query.path || '/'
+    prunePendingOAuth()
+    pendingOAuth.set(n, { path, ts: Date.now() })
 
     res.cookie(
       'login',
       ctx.encrypt({
-        path: req.query.path || '/',
+        path,
         nonce: n,
       }),
       { httpOnly: true, secure, sameSite: 'lax', path: '/' }
     )
 
-    res.redirect(
-      `https://discord.com/oauth2/authorize?${stringify({
-        client_id: process.env.DISCORD_ID,
-        redirect_uri: `${ctx.callbackDomain}/auth/discord/callback`,
-        response_type: 'code',
-        scope: ctx.discordScopes,
-        state: n,
-        prompt: 'consent',
-      })}`
-    )
+    res.redirect(`https://discord.com/oauth2/authorize?${discordAuthorizeQuery(ctx, n)}`)
   })
 
   app.get('/callback', async (req, res) => {
     try {
-      if (!req.cookies.login) {
-        res
-          .status(400)
-          .send(
-            'Нет cookie входа — откройте главную и нажмите «Войти» заново. Не смешивайте localhost и 127.0.0.1: хост в адресе должен совпадать с redirect в Discord Portal.'
-          )
+      const state = typeof req.query.state === 'string' ? req.query.state : ''
+      if (!state) {
+        res.status(400).send('Нет параметра state — начните вход с сайта.')
         return
       }
-      let cookie
-      try {
-        cookie = ctx.decrypt(req.cookies.login)
-      } catch (e) {
-        console.error('OAuth decrypt failed (проверьте NACL_KEY в .env, тот же ключ что при установке cookie /login):', e)
-        res.status(400).send('Сессия входа недействительна — откройте сайт и войдите снова.')
-        return
-      }
-      res.clearCookie('login', { httpOnly: true, secure, sameSite: 'lax', path: '/' })
 
-      if (cookie.nonce !== req.query.state) {
-        console.log('Mismatched nonce!', cookie.nonce, req.query.state)
-        res.status(400).send('Неверный state — попробуйте войти снова.')
+      let returnPath = '/'
+      let stateOk = false
+
+      if (req.cookies.login) {
+        try {
+          const cookie = ctx.decrypt(req.cookies.login)
+          res.clearCookie('login', { httpOnly: true, secure, sameSite: 'lax', path: '/' })
+          if (cookie.nonce === state) {
+            stateOk = true
+            returnPath = cookie.path || '/'
+            pendingOAuth.delete(state)
+          }
+        } catch (e) {
+          console.error('OAuth decrypt login cookie:', e)
+          res.clearCookie('login', { httpOnly: true, secure, sameSite: 'lax', path: '/' })
+        }
+      }
+
+      if (!stateOk && pendingOAuth.has(state)) {
+        const row = pendingOAuth.get(state)
+        pendingOAuth.delete(state)
+        stateOk = true
+        returnPath = row.path || '/'
+      }
+
+      if (!stateOk) {
+        res.status(400).send('Неверный или устаревший state — войдите снова.')
         return
       }
 
@@ -106,7 +144,7 @@ export default function (ctx) {
       })
 
       res.cookie('user', jwt, { secure, sameSite: 'lax', path: '/' })
-      res.redirect(ctx.callbackDomain + (cookie.path || '/'))
+      res.redirect(ctx.callbackDomain + returnPath)
     } catch (e) {
       console.error('Discord OAuth /callback:', e)
       if (!res.headersSent) {
