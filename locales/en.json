@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "home": "Home",
+    "tutorial": "Tutorial",
+    "logout": "Log out"
+  },
+  "hero": {
+    "title": "Discord Reactive Images",
+    "subtitle": "Simple Discord voice chat integration with OBS",
+    "description": "Discord Reactive Images lets you display voice channel members in OBS through a single browser source. It's similar to Discord Streamkit but more flexible: upload your own images, adjust spacing and effects in real time.",
+    "login": "Sign in with Discord",
+    "needDiscord": "Discord must be running for full functionality",
+    "gateHint": "Enter the access code first, then sign in with Discord."
+  },
+  "gate": {
+    "title": "Access Code",
+    "description": "A valid site access code is required for OBS links and image uploads.",
+    "hint": "Enter the access code first.",
+    "accessCode": "Access code",
+    "continue": "Continue",
+    "wrongCode": "Incorrect code",
+    "checkError": "Failed to verify code"
+  },
+  "links": {
+    "title": "OBS Links",
+    "copy": "Copy",
+    "settings": "Settings",
+    "groupSource": "Group Browser Source",
+    "selfSource": "Individual source (you)",
+    "individualSource": "Individual source ({name})",
+    "settingsModal": "{name} — images",
+    "warning": "Copy one of the links and add it to OBS as a browser source. Set the width and height to match your scene. Note: image positions and sizes may change as participants join or leave — do not use this to hide sensitive information (e.g. game codes)."
+  },
+  "config": {
+    "title": "Source Settings",
+    "bounce": "Bounce effect on speech",
+    "includeSelf": "Show self in group view",
+    "spacing": "Image spacing",
+    "apply": "Apply"
+  },
+  "images": {
+    "inactive": "Silence image",
+    "speaking": "Speaking image"
+  },
+  "imageUpload": {
+    "newImage": "New image",
+    "save": "Save",
+    "reset": "Reset"
+  },
+  "tutorial": {
+    "exit": "Exit",
+    "done": "Done",
+    "next": "Next",
+    "step1": "Welcome to Discord Reactive Images. Here you configure images for voice chat streaming. In this tutorial: your own images, OBS links, and display settings.",
+    "step2": "'Silent' — the image shown when you're not speaking. By default, this is your dimmed Discord avatar.",
+    "step3": "To upload your own image, click the file input field and select a file from your computer.",
+    "step4": "After selecting, click 'Save' — the image will upload and update in all browser sources without reloading.",
+    "step5": "'Reset' restores your Discord avatar instead of the uploaded file.",
+    "step6": "'Speaking' — the image shown while you speak. By default it matches the 'silent' image but without dimming.",
+    "step7": "Uploading and saving for 'Speaking' works the same way. 'Reset' will set the same image as 'Silent'.",
+    "step8": "The 'Links' section contains URLs to add in OBS (or other software) as a browser source.",
+    "step9": "The group source shows everyone in the channel — convenient when the lineup changes often.",
+    "step10": "The individual source shows only you. Useful for making yourself larger; an active voice channel is still required.",
+    "step11": "Other participants will appear as separate individual links — you can place them on the scene in advance.",
+    "step12": "For guests, you can open the gear icon and set their own 'silent' / 'speaking' images.",
+    "step13": "In the guest settings window, upload and 'Reset' work the same way. 'Reset' restores images set by the participant themselves.",
+    "step14": "Note the warning: images may shift and resize — don't rely on them to hide sensitive information.",
+    "step15": "Here you configure the behavior and appearance of browser sources.",
+    "step16": "'Bounce' slightly shifts the image up and down when speech starts — more noticeable, but can be distracting.",
+    "step17": "'Show self in group view' — toggle your avatar visibility in the group source.",
+    "step18": "'Spacing' sets the distance between avatars in group mode: positive values create gaps, negative values create overlap.",
+    "step19": "Changes are applied after clicking 'Apply' and immediately reflected in open sources.",
+    "step20": "That's all. If you need help — check the GitHub repository or the original author. Thanks for using the service!"
+  },
+  "footer": {
+    "original": "Original project:",
+    "sourceCode": "Source code on GitHub",
+    "support": "Support",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy"
+  },
+  "error": {
+    "notFound": "Page not found",
+    "notFoundHint": "Check the address or return to the home page.",
+    "errorTitle": "An error occurred",
+    "errorHint": "Try refreshing the page or come back later.",
+    "home": "Home"
+  },
+  "terms": {
+    "back": "← Back",
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: {date}",
+    "s1title": "1. Acceptance of Terms",
+    "s1text": "By using the Discord Reactive Images service ('Service'), you agree to these Terms of Use. If you do not agree, do not use the Service.",
+    "s2title": "2. Service Description",
+    "s2text": "The Service allows you to upload images and generate links for use as Browser Sources in OBS Studio and other streaming software. Images are displayed based on voice activity in Discord.",
+    "s3title": "3. Your Data",
+    "s3text": "When signing in via Discord, we receive your Discord ID, username, and avatar. This data is used solely for identification and displaying your settings. We do not share it with third parties.",
+    "s4title": "4. Uploaded Images",
+    "s4text": "You are responsible for the images you upload. It is prohibited to upload material that infringes copyrights, contains violence, adult content, or any other illegal content.",
+    "s5title": "5. Service Availability",
+    "s5text": "We do not guarantee uninterrupted service operation and may discontinue or modify it without prior notice.",
+    "s6title": "6. Limitation of Liability",
+    "s6text": "The Service is provided 'as is'. We are not liable for any damages arising from the use or inability to use the Service.",
+    "s7title": "7. Changes to Terms",
+    "s7text": "We may update these terms. The current version is always available on this page. By continuing to use the Service after changes, you accept the new terms."
+  },
+  "privacy": {
+    "back": "← Back",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {date}",
+    "s1title": "1. What Data We Collect",
+    "s1intro": "When signing in via Discord, we receive:",
+    "s1li1": "Discord ID",
+    "s1li2": "Username and discriminator",
+    "s1li3": "Avatar URL",
+    "s1li4": "Email address (for identification only, not displayed publicly)",
+    "s2title": "2. How We Use Data",
+    "s2intro": "Data is used exclusively for:",
+    "s2li1": "Identifying your account in the system",
+    "s2li2": "Linking your images to your Discord profile",
+    "s2li3": "Displaying the default avatar",
+    "s3title": "3. Data Storage",
+    "s3text": "Your data is stored in a secure database. Uploaded images are saved on the server. Data is not shared with third parties or used for advertising.",
+    "s4title": "4. Cookies",
+    "s4text": "We use cookies to store your authorization session. Cookies are deleted when you log out. Authentication is not possible without cookies.",
+    "s5title": "5. Data Deletion",
+    "s5text": "You can request deletion of all your data by contacting us. Deletion is irreversible.",
+    "s6title": "6. Third-Party Services",
+    "s6text": "Authentication is handled via Discord OAuth2. Data transmission to Discord is governed by the Discord Privacy Policy.",
+    "s6link": "Discord Privacy Policy",
+    "s7title": "7. Policy Changes",
+    "s7text": "We may update this policy. The current version is always available on this page."
+  }
+}

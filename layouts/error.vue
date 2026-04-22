@@ -3,12 +3,12 @@
     <v-main class="d-flex align-center justify-center fill-height pa-6">
       <div class="text-center" style="max-width: 420px">
         <h1 class="text-h5 font-weight-bold mb-4 white--text">
-          {{ error.statusCode === 404 ? notFoundTitle : errorTitle }}
+          {{ error.statusCode === 404 ? $t('error.notFound') : $t('error.errorTitle') }}
         </h1>
         <p class="dri-muted text-body-2 mb-8">
-          {{ error.statusCode === 404 ? notFoundHint : errorHint }}
+          {{ error.statusCode === 404 ? $t('error.notFoundHint') : $t('error.errorHint') }}
         </p>
-        <v-btn class="dri-btn-light px-8" depressed nuxt to="/">На главную</v-btn>
+        <v-btn class="dri-btn-light px-8" depressed nuxt to="/">{{ $t('error.home') }}</v-btn>
       </div>
     </v-main>
   </v-app>
@@ -23,16 +23,8 @@ export default {
       default: null,
     },
   },
-  data() {
-    return {
-      notFoundTitle: 'Страница не найдена',
-      notFoundHint: 'Проверьте адрес или вернитесь на главную.',
-      errorTitle: 'Произошла ошибка',
-      errorHint: 'Попробуйте обновить страницу или зайти позже.',
-    }
-  },
   head() {
-    const title = this.error.statusCode === 404 ? this.notFoundTitle : this.errorTitle
+    const title = this.error.statusCode === 404 ? this.$t('error.notFound') : this.$t('error.errorTitle')
     return { title }
   },
 }

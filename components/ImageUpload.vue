@@ -9,7 +9,7 @@
         dark
         outlined
         dense
-        label="Новое изображение"
+        :label="$t('imageUpload.newImage')"
         prepend-icon="mdi-camera"
         accept="image/*"
         show-size
@@ -23,7 +23,7 @@
         :loading="imageSaving"
         @click="setImage"
       >
-        Сохранить
+        {{ $t('imageUpload.save') }}
       </v-btn>
 
       <v-btn
@@ -35,7 +35,7 @@
         :loading="imageSaving"
         @click="clearImage"
       >
-        Сброс
+        {{ $t('imageUpload.reset') }}
       </v-btn>
 
       <v-alert v-if="error" class="mt-4" type="error">

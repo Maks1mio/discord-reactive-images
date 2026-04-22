@@ -2,57 +2,47 @@
   <v-app dark>
     <v-main>
       <v-container class="py-12" style="max-width: 800px">
-        <v-btn text small class="mb-6 dri-muted" nuxt to="/">← Назад</v-btn>
+        <v-btn text small class="mb-6 dri-muted" nuxt to="/">{{ $t('privacy.back') }}</v-btn>
 
-        <h1 class="text-h4 font-weight-bold white--text mb-8">Политика конфиденциальности</h1>
+        <h1 class="text-h4 font-weight-bold white--text mb-8">{{ $t('privacy.title') }}</h1>
 
         <div class="dri-legal-body">
-          <p>Последнее обновление: {{ lastUpdated }}</p>
+          <p>{{ $t('privacy.lastUpdated', { date: lastUpdated }) }}</p>
 
-          <h2>1. Какие данные мы собираем</h2>
-          <p>При авторизации через Discord мы получаем:</p>
+          <h2>{{ $t('privacy.s1title') }}</h2>
+          <p>{{ $t('privacy.s1intro') }}</p>
           <ul>
-            <li>Discord ID</li>
-            <li>Имя пользователя и дискриминатор</li>
-            <li>URL аватара</li>
-            <li>Адрес электронной почты (только для идентификации, не отображается публично)</li>
+            <li>{{ $t('privacy.s1li1') }}</li>
+            <li>{{ $t('privacy.s1li2') }}</li>
+            <li>{{ $t('privacy.s1li3') }}</li>
+            <li>{{ $t('privacy.s1li4') }}</li>
           </ul>
 
-          <h2>2. Как мы используем данные</h2>
-          <p>Данные используются исключительно для:</p>
+          <h2>{{ $t('privacy.s2title') }}</h2>
+          <p>{{ $t('privacy.s2intro') }}</p>
           <ul>
-            <li>Идентификации вашего аккаунта в системе</li>
-            <li>Привязки ваших изображений к вашему Discord профилю</li>
-            <li>Отображения аватара по умолчанию</li>
+            <li>{{ $t('privacy.s2li1') }}</li>
+            <li>{{ $t('privacy.s2li2') }}</li>
+            <li>{{ $t('privacy.s2li3') }}</li>
           </ul>
 
-          <h2>3. Хранение данных</h2>
+          <h2>{{ $t('privacy.s3title') }}</h2>
+          <p>{{ $t('privacy.s3text') }}</p>
+
+          <h2>{{ $t('privacy.s4title') }}</h2>
+          <p>{{ $t('privacy.s4text') }}</p>
+
+          <h2>{{ $t('privacy.s5title') }}</h2>
+          <p>{{ $t('privacy.s5text') }}</p>
+
+          <h2>{{ $t('privacy.s6title') }}</h2>
           <p>
-            Ваши данные хранятся в защищённой базе данных. Загружаемые изображения сохраняются на сервере.
-            Данные не передаются третьим лицам и не используются в рекламных целях.
+            {{ $t('privacy.s6text') }}
+            <a href="https://discord.com/privacy" target="_blank" rel="noopener noreferrer">{{ $t('privacy.s6link') }}</a>.
           </p>
 
-          <h2>4. Cookies</h2>
-          <p>
-            Мы используем куки для хранения сессии авторизации. Куки удаляются при выходе из аккаунта.
-            Без куки авторизация невозможна.
-          </p>
-
-          <h2>5. Удаление данных</h2>
-          <p>
-            Вы можете запросить удаление всех ваших данных, написав нам. После удаления восстановление невозможно.
-          </p>
-
-          <h2>6. Сторонние сервисы</h2>
-          <p>
-            Авторизация осуществляется через Discord OAuth2. На передачу данных Discord распространяется
-            <a href="https://discord.com/privacy" target="_blank" rel="noopener noreferrer">политика конфиденциальности Discord</a>.
-          </p>
-
-          <h2>7. Изменения политики</h2>
-          <p>
-            Мы можем обновлять данную политику. Актуальная версия всегда доступна на этой странице.
-          </p>
+          <h2>{{ $t('privacy.s7title') }}</h2>
+          <p>{{ $t('privacy.s7text') }}</p>
         </div>
       </v-container>
     </v-main>
@@ -66,9 +56,9 @@ export default defineComponent({
   name: 'PrivacyPage',
   layout: 'empty',
   setup() {
-    const lastUpdated = computed(() => {
-      return new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })
-    })
+    const lastUpdated = computed(() =>
+      new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })
+    )
     return { lastUpdated }
   },
 })

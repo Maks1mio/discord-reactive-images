@@ -7,17 +7,33 @@
         </nuxt-link>
       </v-toolbar-title>
       <div class="d-none d-sm-flex align-center ml-8">
-        <nuxt-link to="/" exact class="dri-nav-link dri-nav-link--active mr-6">Главная</nuxt-link>
+        <nuxt-link to="/" exact class="dri-nav-link dri-nav-link--active mr-6">{{ $t('nav.home') }}</nuxt-link>
       </div>
       <v-spacer />
 
+      <div class="d-flex align-center mr-3">
+        <v-btn
+          x-small text
+          :color="$i18n.locale === 'ru' ? 'white' : 'grey'"
+          class="lang-btn"
+          @click="$i18n.setLocale('ru')"
+        >RU</v-btn>
+        <span class="grey--text mx-1" style="opacity:0.4">|</span>
+        <v-btn
+          x-small text
+          :color="$i18n.locale === 'en' ? 'white' : 'grey'"
+          class="lang-btn"
+          @click="$i18n.setLocale('en')"
+        >EN</v-btn>
+      </div>
+
       <template v-if="$user">
-        <v-btn text class="mr-2" color="white" outlined rounded @click="setTutorial(1)">Обучение</v-btn>
+        <v-btn text class="mr-2" color="white" outlined rounded @click="setTutorial(1)">{{ $t('nav.tutorial') }}</v-btn>
         <v-avatar size="36" class="ml-2">
           <img :src="`https://cdn.discordapp.com/avatars/${$user.id}/${$user.avatar}.png?size=64`" alt="" />
         </v-avatar>
         <span class="ml-3 d-none d-md-inline text-body-2">{{ $user.username }}#{{ $user.discriminator }}</span>
-        <v-btn class="ml-3" rounded outlined color="white" :href="logout()">Выйти</v-btn>
+        <v-btn class="ml-3" rounded outlined color="white" :href="logout()">{{ $t('nav.logout') }}</v-btn>
       </template>
 
     </v-app-bar>
@@ -35,23 +51,21 @@
               loop
               playsinline
             />
-            <h1 class="text-h4 text-md-h3 font-weight-bold mb-3">Discord Reactive Images</h1>
-            <p class="text-h6 font-weight-medium mb-6 dri-muted">Простая интеграция голосового чата Discord с OBS</p>
+            <h1 class="text-h4 text-md-h3 font-weight-bold mb-3">{{ $t('hero.title') }}</h1>
+            <p class="text-h6 font-weight-medium mb-6 dri-muted">{{ $t('hero.subtitle') }}</p>
             <p v-if="!showGateForm" class="text-body-1 mb-10 mx-auto dri-hero-text">
-              Discord Reactive Images помогает показать участников голосового канала в OBS через один браузерный
-              источник. Это похоже на
-              <a href="https://streamkit.discord.com/overlay" target="_blank" rel="noopener noreferrer">Discord Streamkit</a
-              >, но с большей гибкостью: загрузите свои изображения, настройте отступы и эффекты в реальном времени.
+              {{ $t('hero.description') }}
+              <a href="https://streamkit.discord.com/overlay" target="_blank" rel="noopener noreferrer">Discord Streamkit</a>.
             </p>
 
             <v-alert v-if="showGateForm && needGateHint" type="info" text dense outlined class="mb-6 dri-panel">
-              Сначала введите код доступа, затем можно войти через Discord.
+              {{ $t('hero.gateHint') }}
             </v-alert>
 
             <template v-if="showGateForm">
               <v-text-field
                 v-model="accessCode"
-                label="Код доступа"
+                :label="$t('gate.accessCode')"
                 type="password"
                 outlined
                 dark
@@ -62,14 +76,14 @@
                 @keyup.enter="submitAccess"
               />
               <v-btn class="dri-btn-light px-10" x-large depressed :loading="gateSubmitting" @click="submitAccess">
-                Продолжить
+                {{ $t('gate.continue') }}
               </v-btn>
               <v-alert v-if="gateError" type="error" text dense outlined class="mt-4 dri-panel">{{ gateError }}</v-alert>
             </template>
 
             <template v-else>
-              <v-btn class="dri-btn-light px-10" x-large depressed :href="login('discord')">Войти через Discord</v-btn>
-              <div class="mt-4 text-caption dri-muted">Нужен запущенный Discord для полного функционала</div>
+              <v-btn class="dri-btn-light px-10" x-large depressed :href="login('discord')">{{ $t('hero.login') }}</v-btn>
+              <div class="mt-4 text-caption dri-muted">{{ $t('hero.needDiscord') }}</div>
             </template>
           </v-col>
         </v-row>
@@ -77,17 +91,15 @@
         <v-row v-else>
           <v-col v-if="showGateForm" cols="12" sm="10" md="8" lg="6" class="mx-auto">
             <v-card class="dri-panel" flat outlined>
-              <v-card-title class="text-h6 font-weight-bold">Код доступа</v-card-title>
+              <v-card-title class="text-h6 font-weight-bold">{{ $t('gate.title') }}</v-card-title>
               <v-card-text>
                 <v-alert v-if="needGateHint" type="info" text dense outlined class="mb-4 dri-panel" border="left">
-                  Сначала введите код доступа.
+                  {{ $t('gate.hint') }}
                 </v-alert>
-                <p class="text-body-2 dri-muted mb-4">
-                  Для ссылок в OBS и загрузки изображений нужен действующий код доступа к сайту.
-                </p>
+                <p class="text-body-2 dri-muted mb-4">{{ $t('gate.description') }}</p>
                 <v-text-field
                   v-model="accessCode"
-                  label="Код доступа"
+                  :label="$t('gate.accessCode')"
                   type="password"
                   outlined
                   dark
@@ -97,7 +109,7 @@
                   @keyup.enter="submitAccess"
                 />
                 <v-btn class="dri-btn-light" block large depressed :loading="gateSubmitting" @click="submitAccess">
-                  Продолжить
+                  {{ $t('gate.continue') }}
                 </v-btn>
                 <v-alert v-if="gateError" type="error" text dense outlined class="mt-4 dri-panel">{{ gateError }}</v-alert>
               </v-card-text>
@@ -111,7 +123,7 @@
           </v-col>
           <v-col cols="12" md="4" lg="6" order-md="last">
             <v-card class="mb-4 links dri-panel" flat>
-              <v-card-title class="text-h6 font-weight-bold">Ссылки для OBS</v-card-title>
+              <v-card-title class="text-h6 font-weight-bold">{{ $t('links.title') }}</v-card-title>
               <v-card-text>
                 <v-text-field
                   v-for="l in links"
@@ -133,7 +145,7 @@
                           <v-icon small>mdi-content-copy</v-icon>
                         </v-btn>
                       </template>
-                      <span>Скопировать</span>
+                      <span>{{ $t('links.copy') }}</span>
                     </v-tooltip>
                   </template>
                   <template slot="append-outer">
@@ -156,18 +168,18 @@
                               <v-icon small>mdi-cog</v-icon>
                             </v-btn>
                           </template>
-                          <span>Настройки</span>
+                          <span>{{ $t('links.settings') }}</span>
                         </v-tooltip>
                       </template>
 
                       <v-card v-if="l.settings" class="source-settings-modal dri-panel">
-                        <v-card-title class="justify-center">{{ l.settings.name }} — изображения</v-card-title>
+                        <v-card-title class="justify-center">{{ $t('links.settingsModal', { name: l.settings.name }) }}</v-card-title>
                         <v-card-text>
                           <v-row justify="center">
                             <v-col cols="12" sm="6">
                               <image-upload
                                 class="inactive-image"
-                                title="Изображение «тишина»"
+                                :title="$t('images.inactive')"
                                 v-model="l.settings.inactive"
                                 :fallback="l.settings.speaking"
                                 :base="l.settings.inactiveBase"
@@ -178,7 +190,7 @@
                             <v-col cols="12" sm="6">
                               <image-upload
                                 class="speaking-image"
-                                title="Изображение «говорю»"
+                                :title="$t('images.speaking')"
                                 v-model="l.settings.speaking"
                                 :fallback="l.settings.inactive"
                                 :base="l.settings.speakingBase"
@@ -193,30 +205,25 @@
                   </template>
                 </v-text-field>
 
-                <div class="text-caption links-warning dri-muted">
-                  Скопируйте одну из ссылок и добавьте её в OBS как браузерный источник. Задайте ширину и высоту под вашу
-                  сцену.
-                  <strong>Внимание:</strong> расположение и размер картинок могут меняться при входе и выходе участников —
-                  не используйте это для сокрытия конфиденциальных данных (например, кодов игры).
-                </div>
+                <div class="text-caption links-warning dri-muted">{{ $t('links.warning') }}</div>
               </v-card-text>
             </v-card>
 
             <v-card class="config dri-panel" flat>
-              <v-card-title class="text-h6 font-weight-bold">Настройки источника</v-card-title>
+              <v-card-title class="text-h6 font-weight-bold">{{ $t('config.title') }}</v-card-title>
               <v-card-text>
                 <v-form @submit.prevent="saveConfig">
                   <v-checkbox
                     class="bounce"
                     dark
-                    label="Эффект подпрыгивания при речи"
+                    :label="$t('config.bounce')"
                     v-model="config.bounce"
                     hide-details
                   />
                   <v-checkbox
                     class="include-self"
                     dark
-                    label="Показывать себя в групповом виде"
+                    :label="$t('config.includeSelf')"
                     v-model="config.includeSelf"
                     hide-details
                   />
@@ -224,7 +231,7 @@
                   <v-slider
                     class="mt-4 image-spacing"
                     dark
-                    label="Отступ между изображениями"
+                    :label="$t('config.spacing')"
                     v-model="config.gapPercentage"
                     min="-500"
                     max="50"
@@ -233,7 +240,7 @@
                   />
 
                   <v-btn class="mt-6 dri-btn-light" block large depressed type="submit" :disabled="configSaving" :loading="configSaving">
-                    Применить
+                    {{ $t('config.apply') }}
                   </v-btn>
 
                   <v-alert v-if="configError" class="mt-4" type="error" outlined dense>
@@ -246,7 +253,7 @@
           <v-col cols="12" sm="6" md="4" lg="3">
             <image-upload
               class="inactive-image"
-              title="Изображение «тишина»"
+              :title="$t('images.inactive')"
               v-model="currentImages.inactive"
               :fallback="currentImages.speaking"
               :base="currentImages.base"
@@ -257,7 +264,7 @@
           <v-col cols="12" sm="6" md="4" lg="3">
             <image-upload
               class="speaking-image"
-              title="Изображение «говорю»"
+              :title="$t('images.speaking')"
               v-model="currentImages.speaking"
               :fallback="currentImages.inactive"
               :base="currentImages.base"
@@ -273,83 +280,42 @@
     <v-footer class="dri-footer transparent pt-8 pb-12">
       <v-container>
         <div class="text-caption text-center dri-muted">
-          Оригинальный проект:
+          {{ $t('footer.original') }}
           <a href="https://twitter.com/Fugiman" target="_blank" rel="noopener noreferrer" class="white--text">Fugi</a>.
           <a href="https://github.com/Fugiman/discord-reactive-images" target="_blank" rel="noopener noreferrer" class="white--text"
-            >Исходный код на GitHub</a
+            >{{ $t('footer.sourceCode') }}</a
           >.
-          <a href="https://paypal.me/fugiman" target="_blank" rel="noopener noreferrer" class="white--text">Поддержать</a>.
+          <a href="https://paypal.me/fugiman" target="_blank" rel="noopener noreferrer" class="white--text">{{ $t('footer.support') }}</a>.
         </div>
         <div class="text-caption text-center mt-2" style="opacity: 0.45">
-          <nuxt-link to="/terms" class="white--text">Условия использования</nuxt-link>
+          <nuxt-link to="/terms" class="white--text">{{ $t('footer.terms') }}</nuxt-link>
           &nbsp;·&nbsp;
-          <nuxt-link to="/privacy" class="white--text">Политика конфиденциальности</nuxt-link>
+          <nuxt-link to="/privacy" class="white--text">{{ $t('footer.privacy') }}</nuxt-link>
         </div>
       </v-container>
     </v-footer>
 
     <v-overlay v-if="tutorial > 0" opacity="0.92">
-      <tutorial-step :step="1" bottom>
-        Добро пожаловать в Discord Reactive Images. Здесь вы настраиваете картинки для трансляции голосового чата. В
-        этом обучении: свои изображения, ссылки для OBS и параметры отображения.
-      </tutorial-step>
-      <tutorial-step :step="2" activator=".inactive-image" right>
-        «Тишина» — картинка, когда вы не говорите. По умолчанию это приглушённый аватар Discord.
-      </tutorial-step>
-      <tutorial-step :step="3" activator=".inactive-image .v-file-input" right>
-        Чтобы загрузить своё изображение, нажмите поле выбора файла и укажите файл на компьютере.
-      </tutorial-step>
-      <tutorial-step :step="4" activator=".inactive-image .image-upload-save" right>
-        После выбора нажмите «Сохранить» — изображение загрузится и обновится во всех браузерных источниках без перезагрузки.
-      </tutorial-step>
-      <tutorial-step :step="5" activator=".inactive-image .image-upload-revert" right>
-        «Сброс» возвращает аватар Discord вместо загруженного файла.
-      </tutorial-step>
-      <tutorial-step :step="6" activator=".speaking-image" right>
-        «Говорю» — картинка во время речи. По умолчанию совпадает с активным вариантом «тишины», но без затемнения.
-      </tutorial-step>
-      <tutorial-step :step="7" activator=".speaking-image" right>
-        Загрузка и сохранение для «говорю» работают так же. «Сброс» выставит то же изображение, что и для «тишины».
-      </tutorial-step>
-      <tutorial-step :step="8" activator=".links" left>
-        В блоке «Ссылки» — URL для вставки в OBS (или другое ПО) как браузерный источник.
-      </tutorial-step>
-      <tutorial-step :step="9" activator=".links .group-source" left>
-        Групповой источник показывает всех в канале — удобно, если состав часто меняется.
-      </tutorial-step>
-      <tutorial-step :step="10" activator=".links .self-source" left>
-        Индивидуальный источник — только вы. Удобно сделать себя крупнее; всё равно нужен активный голосовой канал.
-      </tutorial-step>
-      <tutorial-step :step="11" activator=".links .other-source" left>
-        Остальные участники появятся отдельными индивидуальными ссылками — можно заранее расставить их на сцене.
-      </tutorial-step>
-      <tutorial-step :step="12" activator=".links .other-source .source-settings" left>
-        У гостей можно открыть шестерёнку и задать свои картинки «тишина» / «говорю».
-      </tutorial-step>
-      <tutorial-step :step="13" activator="" bottom>
-        В окне настроек гостя загрузка и «Сброс» работают так же. «Сброс» возвращает изображения, заданные самим участником.
-      </tutorial-step>
-      <tutorial-step :step="14" activator=".links .links-warning" left>
-        Учтите предупреждение: картинки могут смещаться и менять размер — не полагайтесь на них для сокрытия важной информации.
-      </tutorial-step>
-      <tutorial-step :step="15" activator=".config" left>
-        Здесь настраивается поведение и внешний вид браузерных источников.
-      </tutorial-step>
-      <tutorial-step :step="16" activator=".config .bounce" left>
-        «Подпрыгивание» слегка сдвигает картинку вверх-вниз при начале речи — заметнее, но может отвлекать.
-      </tutorial-step>
-      <tutorial-step :step="17" activator=".config .include-self" left>
-        «Показывать себя в групповом виде» — включите или скройте свой аватар в групповом источнике.
-      </tutorial-step>
-      <tutorial-step :step="18" activator=".config .image-spacing" left>
-        «Отступ» задаёт расстояние между аватарами в групповом режиме: положительные значения — зазор, отрицательные — перекрытие.
-      </tutorial-step>
-      <tutorial-step :step="19" activator=".config .v-btn" left>
-        Изменения применяются после нажатия «Применить» и сразу отражаются в открытых источниках.
-      </tutorial-step>
-      <tutorial-step :step="20" activator=".dri-footer" final top>
-        На этом всё. Если нужна помощь — загляните в репозиторий на GitHub или к автору оригинала. Спасибо, что пользуетесь сервисом!
-      </tutorial-step>
+      <tutorial-step :step="1" bottom>{{ $t('tutorial.step1') }}</tutorial-step>
+      <tutorial-step :step="2" activator=".inactive-image" right>{{ $t('tutorial.step2') }}</tutorial-step>
+      <tutorial-step :step="3" activator=".inactive-image .v-file-input" right>{{ $t('tutorial.step3') }}</tutorial-step>
+      <tutorial-step :step="4" activator=".inactive-image .image-upload-save" right>{{ $t('tutorial.step4') }}</tutorial-step>
+      <tutorial-step :step="5" activator=".inactive-image .image-upload-revert" right>{{ $t('tutorial.step5') }}</tutorial-step>
+      <tutorial-step :step="6" activator=".speaking-image" right>{{ $t('tutorial.step6') }}</tutorial-step>
+      <tutorial-step :step="7" activator=".speaking-image" right>{{ $t('tutorial.step7') }}</tutorial-step>
+      <tutorial-step :step="8" activator=".links" left>{{ $t('tutorial.step8') }}</tutorial-step>
+      <tutorial-step :step="9" activator=".links .group-source" left>{{ $t('tutorial.step9') }}</tutorial-step>
+      <tutorial-step :step="10" activator=".links .self-source" left>{{ $t('tutorial.step10') }}</tutorial-step>
+      <tutorial-step :step="11" activator=".links .other-source" left>{{ $t('tutorial.step11') }}</tutorial-step>
+      <tutorial-step :step="12" activator=".links .other-source .source-settings" left>{{ $t('tutorial.step12') }}</tutorial-step>
+      <tutorial-step :step="13" activator="" bottom>{{ $t('tutorial.step13') }}</tutorial-step>
+      <tutorial-step :step="14" activator=".links .links-warning" left>{{ $t('tutorial.step14') }}</tutorial-step>
+      <tutorial-step :step="15" activator=".config" left>{{ $t('tutorial.step15') }}</tutorial-step>
+      <tutorial-step :step="16" activator=".config .bounce" left>{{ $t('tutorial.step16') }}</tutorial-step>
+      <tutorial-step :step="17" activator=".config .include-self" left>{{ $t('tutorial.step17') }}</tutorial-step>
+      <tutorial-step :step="18" activator=".config .image-spacing" left>{{ $t('tutorial.step18') }}</tutorial-step>
+      <tutorial-step :step="19" activator=".config .v-btn" left>{{ $t('tutorial.step19') }}</tutorial-step>
+      <tutorial-step :step="20" activator=".dri-footer" final top>{{ $t('tutorial.step20') }}</tutorial-step>
     </v-overlay>
   </v-app>
 </template>
@@ -368,7 +334,6 @@ import {
 import { useDiscordRPC } from '~/assets/discordrpc'
 import { publicImageUrl } from '~/assets/publicImage'
 
-/** Демо-аватар для шага обучения (Discord CDN, без вашего хранилища) */
 const DEMO_EMBED_AVATAR = 'https://cdn.discordapp.com/embed/avatars/2.png'
 
 interface State {
@@ -392,8 +357,10 @@ interface Link {
 export default defineComponent({
   setup() {
     // @ts-ignore
-    const { $api, $user, $route } = useContext()
+    const { $api, $user, $route, app } = useContext()
     const store = useStore<State>()
+
+    const t = (key: string, params?: any) => app.i18n.t(key, params) as string
 
     const promoVideoUrl = process.env.PROMO_VIDEO_URL || ''
     const gateEnabled = process.env.SITE_GATE_ENABLED === '1'
@@ -405,12 +372,10 @@ export default defineComponent({
     const login = (platform: string) => `/auth/${platform}/login?path=${encodeURIComponent($route?.fullPath || '/')}`
     const logout = () => `/auth/logout?path=${encodeURIComponent($route?.fullPath || '/')}`
 
-    const tutorial = computed(() => {
-      return store.state.tutorial
-    })
-    const tutorialClass = computed(() => {
-      return tutorial.value ? `tutorial-${tutorial.value.toString().padStart(2, '0')}` : null
-    })
+    const tutorial = computed(() => store.state.tutorial)
+    const tutorialClass = computed(() =>
+      tutorial.value ? `tutorial-${tutorial.value.toString().padStart(2, '0')}` : null
+    )
     const setTutorial = (step: number) => store.commit('setTutorial', step)
 
     const needGateHint = computed(() => $route?.query?.need_gate === '1')
@@ -434,12 +399,12 @@ export default defineComponent({
         })
         const d = await r.json().catch(() => ({}))
         if (!r.ok) {
-          gateError.value = (d as { error?: string })?.error || 'Неверный код'
+          gateError.value = (d as { error?: string })?.error || t('gate.wrongCode')
           return
         }
         gateOk.value = true
       } catch (_) {
-        gateError.value = 'Не удалось проверить код'
+        gateError.value = t('gate.checkError')
       } finally {
         gateSubmitting.value = false
       }
@@ -492,20 +457,19 @@ export default defineComponent({
       }
     })
 
-    const otherMembers = computed(() => {
-      return members.value.filter((m) => m.id !== config.value.id)
-    })
+    const otherMembers = computed(() => members.value.filter((m) => m.id !== config.value.id))
 
     const links = computed(() => {
+      const _locale = app.i18n.locale
       const origin = siteOrigin.value
       const r: Link[] = [
         {
-          label: 'Групповой браузерный источник',
+          label: t('links.groupSource'),
           value: `${origin}/group`,
           class: 'group-source',
         },
         {
-          label: 'Индивидуальный источник (вы)',
+          label: t('links.selfSource'),
           value: `${origin}/individual/${$user && $user.id}`,
           class: 'self-source',
         },
@@ -513,7 +477,7 @@ export default defineComponent({
 
       if (tutorial.value > 0) {
         r.push({
-          label: 'Индивидуальный источник (ДругА)',
+          label: t('links.individualSource', { name: 'ДругА' }),
           value: `${origin}/individual/00000000000000001`,
           class: 'other-source',
           settings: {
@@ -524,7 +488,7 @@ export default defineComponent({
           },
         })
         r.push({
-          label: 'Индивидуальный источник (ДругБ)',
+          label: t('links.individualSource', { name: 'ДругБ' }),
           value: `${origin}/individual/00000000000000002`,
           class: 'other-source',
           settings: {
@@ -539,7 +503,7 @@ export default defineComponent({
 
       for (const m of otherMembers.value) {
         r.push({
-          label: `Индивидуальный источник (${m.name})`,
+          label: t('links.individualSource', { name: m.name }),
           value: `${origin}/individual/${m.id}`,
           settings: {
             id: m.id,
@@ -586,19 +550,16 @@ export default defineComponent({
       },
       async saveConfig() {
         data.configSaving = true
-
         try {
           await $api.set_config({
             includeSelf: config.value.includeSelf,
             bounce: config.value.bounce,
             gapPercentage: config.value.gapPercentage,
           })
-
           data.configError = null
         } catch (err: any) {
           data.configError = err?.message || String(err)
         }
-
         data.configSaving = false
       },
     }
@@ -630,7 +591,6 @@ export default defineComponent({
   text-decoration: underline;
 }
 
-
 .dri-main-landing {
   display: flex;
   flex-direction: column;
@@ -654,6 +614,14 @@ export default defineComponent({
 
 .dri-footer a {
   text-decoration: underline;
+}
+
+.lang-btn {
+  min-width: 0 !important;
+  padding: 0 6px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
 }
 
 .tutorial-02 .inactive-image,

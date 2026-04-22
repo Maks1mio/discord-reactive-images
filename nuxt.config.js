@@ -47,7 +47,30 @@ module.exports = {
   modules: [
     '@nuxtjs/redirect-module',
     '~/modules/nuxt-api',
+    '@nuxtjs/i18n',
   ],
+
+  i18n: {
+    locales: [
+      { code: 'ru', name: 'RU' },
+      { code: 'en', name: 'EN' },
+    ],
+    defaultLocale: 'en',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'dri_lang',
+      redirectOn: 'root',
+      alwaysRedirect: false,
+    },
+    vueI18n: {
+      fallbackLocale: 'en',
+      messages: {
+        ru: require('./locales/ru.json'),
+        en: require('./locales/en.json'),
+      },
+    },
+  },
 
   serverMiddleware: {
   },
