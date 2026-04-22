@@ -20,9 +20,9 @@ function prunePendingOAuth() {
  * Как в Discord Portal: client_id, response_type, redirect_uri, scope с «+», затем state и prompt.
  * Не querystring.stringify — иначе scope даёт %20 вместо «+».
  */
-function discordAuthorizeQuery(ctx, state) {
+function discordAuthorizeQuery(ctx, state, webScopes) {
   const redirectUri = `${ctx.callbackDomain}/auth/discord/callback`
-  const scopePlus = String(ctx.discordScopes || '')
+  const scopePlus = String(webScopes || '')
     .trim()
     .split(/\s+/)
     .join('+')
@@ -47,19 +47,21 @@ export default function (ctx) {
 
     const n = ctx.nonce()
     const path = req.query.path || '/'
+    const webScopes = String(ctx.discordScopes || '').trim()
     prunePendingOAuth()
-    pendingOAuth.set(n, { path, ts: Date.now() })
+    pendingOAuth.set(n, { path, ts: Date.now(), webScopes })
 
     res.cookie(
       'login',
       ctx.encrypt({
         path,
         nonce: n,
+        webScopes,
       }),
       { httpOnly: true, secure, sameSite: 'lax', path: '/' }
     )
 
-    res.redirect(`https://discord.com/oauth2/authorize?${discordAuthorizeQuery(ctx, n)}`)
+    res.redirect(`https://discord.com/oauth2/authorize?${discordAuthorizeQuery(ctx, n, webScopes)}`)
   })
 
   app.get('/callback', async (req, res) => {
@@ -72,6 +74,7 @@ export default function (ctx) {
 
       let returnPath = '/'
       let stateOk = false
+      let webScopes = String(ctx.discordScopes || '').trim()
 
       if (req.cookies.login) {
         try {
@@ -80,6 +83,7 @@ export default function (ctx) {
           if (cookie.nonce === state) {
             stateOk = true
             returnPath = cookie.path || '/'
+            webScopes = String(cookie.webScopes || webScopes).trim()
             pendingOAuth.delete(state)
           }
         } catch (e) {
@@ -93,6 +97,7 @@ export default function (ctx) {
         pendingOAuth.delete(state)
         stateOk = true
         returnPath = row.path || '/'
+        webScopes = String((row && row.webScopes) || webScopes).trim()
       }
 
       if (!stateOk) {
@@ -106,11 +111,7 @@ export default function (ctx) {
           typeof req.query.error_description === 'string' ? req.query.error_description : ''
         const desc = raw ? decodeURIComponent(raw.replace(/\+/g, ' ')) : ''
         console.log('Discord OAuth redirect error', code, desc)
-        const hint =
-          code === 'invalid_scope'
-            ? ' Обычно это лишний scope «rpc» в браузерном OAuth — он не нужен для входа на сайт (RPC запрашивается отдельно у клиента Discord).'
-            : ''
-        res.status(400).send(`Discord: ${code}${desc ? ` — ${desc}` : ''}.${hint}`)
+        res.status(400).send(`Discord: ${code}${desc ? ` — ${desc}` : ''}.`)
         return
       }
 
@@ -130,7 +131,7 @@ export default function (ctx) {
           code: req.query.code,
           grant_type: 'authorization_code',
           redirect_uri: `${ctx.callbackDomain}/auth/discord/callback`,
-          scope: ctx.discordScopes,
+          scope: webScopes,
         }),
       })
       const tokenData = await tokenResp.json()

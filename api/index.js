@@ -32,12 +32,11 @@ export { cookieShouldBeSecure }
 
 /**
  * Scopes редиректа https://discord.com/oauth2/authorize (вход на сайт).
- * По умолчанию без `rpc`: у многих приложений Discord возвращает invalid_scope в браузере.
- * Сам scope `rpc` для голоса/RPC запрашивается у клиента Discord командой AUTHORIZE в assets/discordrpc.ts (после ws://127.0.0.1:6463).
- * Если вашему приложению Discord разрешён rpc в веб-OAuth: DISCORD_WEB_OAUTH_SCOPES="identify email rpc"
+ * По требованию проекта по умолчанию включаем rpc в веб-OAuth.
+ * При необходимости можно переопределить через DISCORD_WEB_OAUTH_SCOPES.
  */
 export const discordScopes = (
-  process.env.DISCORD_WEB_OAUTH_SCOPES || 'identify email'
+  process.env.DISCORD_WEB_OAUTH_SCOPES || 'identify email rpc'
 ).trim()
 
 export function nonce() {

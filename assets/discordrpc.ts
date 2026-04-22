@@ -181,7 +181,6 @@ export function useDiscordRPC() {
         const q = new URLSearchParams({
           v: '1',
           client_id: rpcClientId,
-          encoding: 'json',
         })
         socket = new WebSocket(`ws://127.0.0.1:${port}/?${q.toString()}`)
       } catch (err) {
@@ -331,7 +330,7 @@ export function useDiscordRPC() {
         const d = <AuthorizeResponse>await s.request('AUTHORIZE', {
           client_id: rpcClientId,
           scopes: ['rpc', 'identify'],
-          prompt: 'none',
+          prompt: 'consent',
         })
         console.log('authorize', d)
         config.value = await $api.code(d.code)

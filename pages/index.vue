@@ -280,6 +280,11 @@
           >.
           <a href="https://paypal.me/fugiman" target="_blank" rel="noopener noreferrer" class="white--text">Поддержать</a>.
         </div>
+        <div class="text-caption text-center mt-2" style="opacity: 0.45">
+          <nuxt-link to="/terms" class="white--text">Условия использования</nuxt-link>
+          &nbsp;·&nbsp;
+          <nuxt-link to="/privacy" class="white--text">Политика конфиденциальности</nuxt-link>
+        </div>
       </v-container>
     </v-footer>
 
